@@ -155,7 +155,7 @@ def _make_viewer_then(
     }
     if viewer is None:
         viewer = Viewer(**vkwargs)
-    kwargs.update(kwargs.pop("kwargs", {}))
+    kwargs |= kwargs.pop("kwargs", {})
     method = getattr(viewer, add_method)
     added = method(*args, **kwargs)
     if isinstance(added, list):

@@ -30,11 +30,9 @@ SAMPLE_PARAMS = {
 
 def get_image_params():
     # chunksizes = [(64,64,64), (256,256,256), (512,512,512)]
-    latencies = [0.05 * i for i in range(0, 3)]
+    latencies = [0.05 * i for i in range(3)]
     datanames = SAMPLE_PARAMS.keys()
-    params = (latencies, datanames)
-
-    return params
+    return latencies, datanames
 
 
 class SlowMemoryStore(zarr.storage.MemoryStore):

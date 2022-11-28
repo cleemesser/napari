@@ -265,13 +265,13 @@ def test_visiblity():
     assert layer.visible is True
 
     layer.visible = False
-    assert layer.visible is False
+    assert not layer.visible
 
     layer = Image(data, visible=False)
-    assert layer.visible is False
+    assert not layer.visible
 
     layer.visible = True
-    assert layer.visible is True
+    assert layer.visible
 
 
 def test_opacity():

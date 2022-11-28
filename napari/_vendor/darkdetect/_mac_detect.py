@@ -51,17 +51,10 @@ def theme():
     appearanceNS = msg(stdUserDef, n('stringForKey:'), void_p(key))
     appearanceC = msg(appearanceNS, n('UTF8String'))
 
-    if appearanceC is not None:
-        out = ctypes.string_at(appearanceC)
-    else:
-        out = None
-
+    out = ctypes.string_at(appearanceC) if appearanceC is not None else None
     msg(pool, n('release'))
 
-    if out is not None:
-        return out.decode('utf-8')
-    else:
-        return 'Light'
+    return out.decode('utf-8') if out is not None else 'Light'
 
 def isDark():
     return theme() == 'Dark'

@@ -398,11 +398,7 @@ class Shape(ABC):
                 )
             )
 
-        if self._use_face_vertices:
-            data = self._face_vertices
-        else:
-            data = self.data_displayed
-
+        data = self._face_vertices if self._use_face_vertices else self.data_displayed
         data = data[:, -len(shape_plane) :]
 
         if self._filled:
@@ -415,15 +411,13 @@ class Shape(ABC):
         if embedded:
             mask = np.zeros(mask_shape, dtype=bool)
             slice_key = [0] * len(mask_shape)
-            j = 0
-            for i in range(len(mask_shape)):
-                if i in self.dims_displayed:
-                    slice_key[i] = slice(None)
-                else:
-                    slice_key[i] = slice(
-                        self.slice_key[0, j], self.slice_key[1, j] + 1
-                    )
-                j += 1
+            for j, i in enumerate(range(len(mask_shape))):
+                slice_key[i] = (
+                    slice(None)
+                    if i in self.dims_displayed
+                    else slice(self.slice_key[0, j], self.slice_key[1, j] + 1)
+                )
+
             displayed_order = argsort(self.dims_displayed)
             mask[tuple(slice_key)] = mask_p.transpose(displayed_order)
         else:

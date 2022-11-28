@@ -86,8 +86,9 @@ class QtReaderDialog(QDialog):
             isdir = True
         else:
             existing_pref = get_settings().plugins.extension2reader.get(
-                '*' + self._extension
+                f'*{self._extension}'
             )
+
             isdir = False
 
         if existing_pref:
@@ -122,8 +123,7 @@ class QtReaderDialog(QDialog):
 
     def _get_plugin_choice(self):
         """Get user's plugin choice based on the checked button"""
-        checked_btn = self.reader_btn_group.checkedButton()
-        if checked_btn:
+        if checked_btn := self.reader_btn_group.checkedButton():
             return checked_btn.text()
 
     def _get_persist_choice(self):
@@ -138,9 +138,7 @@ class QtReaderDialog(QDialog):
         display_name = ''
         persist_choice = False
 
-        dialog_result = self.exec_()
-        # user pressed cancel
-        if dialog_result:
+        if dialog_result := self.exec_():
             # grab the selected radio button text
             display_name = self._get_plugin_choice()
             # grab the persistence checkbox choice
@@ -292,7 +290,7 @@ def open_with_dialog_choices(
 
     if persist:
         if not extension.endswith(os.sep):
-            extension = '*' + extension
+            extension = f'*{extension}'
         get_settings().plugins.extension2reader = {
             **get_settings().plugins.extension2reader,
             extension: plugin_name,

@@ -194,7 +194,7 @@ class QtDims(QWidget):
         """
         # remove extra sliders so that only number_of_sliders are left
         # remove from the beginning of the list
-        for slider_num in range(number_of_sliders, self.nsliders):
+        for _ in range(number_of_sliders, self.nsliders):
             self._remove_slider_widget(0)
 
     def _remove_slider_widget(self, index):
@@ -285,8 +285,9 @@ class QtDims(QWidget):
         # we want to avoid playing a dimension that does not have a slider
         # (like X or Y, or a third dimension in volume view.)
         if self._displayed_sliders[axis]:
-            work = self.slider_widgets[axis]._play(fps, loop_mode, frame_range)
-            if work:
+            if work := self.slider_widgets[axis]._play(
+                fps, loop_mode, frame_range
+            ):
                 self._animation_worker, self._animation_thread = work
             else:
                 self._animation_worker, self._animation_thread = None, None

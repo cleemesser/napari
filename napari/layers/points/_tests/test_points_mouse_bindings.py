@@ -331,7 +331,7 @@ def test_unselect_by_click_empty_3d(create_known_points_layer_3d):
     mouse_release_callbacks(layer, event)
 
     # Check clicked point selected
-    assert len(layer.selected_data) == 0
+    assert not layer.selected_data
 
 
 def test_after_in_add_mode_point(create_known_points_layer_2d):
@@ -490,7 +490,7 @@ def test_unselecting_points(create_known_points_layer_2d):
     mouse_release_callbacks(layer, event)
 
     # Check clicked point selected
-    assert len(layer.selected_data) == 0
+    assert not layer.selected_data
 
 
 def test_selecting_all_points_with_drag_2d(create_known_points_layer_2d):
@@ -708,10 +708,7 @@ def test_drag_start_selection(
     layer.mode = 'select'
     layer.selected_data = pre_selection
 
-    if on_point:
-        initial_position = tuple(layer.data[0])
-    else:
-        initial_position = tuple(known_non_point)
+    initial_position = tuple(layer.data[0]) if on_point else tuple(known_non_point)
     zero_pos = [0, 0]
     initial_position_1 = tuple(layer.data[1])
     diff_data_1 = [
@@ -749,13 +746,14 @@ def test_drag_start_selection(
     else:
         center = [0, 0]
 
-    if not modifier:
-        start_position = [
+    start_position = (
+        initial_position
+        if modifier
+        else [
             initial_position[0] - center[0],
             initial_position[1] - center[1],
         ]
-    else:
-        start_position = initial_position
+    )
 
     is_point_move = len(layer.selected_data) > 0 and on_point and not modifier
 
@@ -847,25 +845,23 @@ def test_drag_start_selection(
 
     if on_point and 0 in pre_selection and modifier:
         assert layer.selected_data == pre_selection - {0}
-    elif on_point and 0 in pre_selection and not modifier:
+    elif on_point and 0 in pre_selection:
         assert layer.selected_data == pre_selection
-    elif on_point and 0 not in pre_selection and modifier:
+    elif on_point and modifier:
         assert layer.selected_data == pre_selection | {0}
-    elif on_point and 0 not in pre_selection and not modifier:
+    elif on_point:
         assert layer.selected_data == {0}
     elif 0 in pre_selection and modifier:
         assert 0 not in layer.selected_data
         assert layer.selected_data == (set(range(n_points)) - pre_selection)
-    elif 0 in pre_selection and not modifier:
+    elif 0 in pre_selection:
         assert 0 in layer.selected_data
         assert layer.selected_data == set(range(n_points))
-    elif 0 not in pre_selection and modifier:
+    elif modifier:
         assert 0 in layer.selected_data
         assert layer.selected_data == (set(range(n_points)) - pre_selection)
-    elif 0 not in pre_selection and not modifier:
+    else:
         assert 0 in layer.selected_data
         assert layer.selected_data == set(range(n_points))
-    else:
-        assert False, 'Unreachable code'  # pragma: no cover
     assert layer._drag_box is None
     assert layer._drag_start is None

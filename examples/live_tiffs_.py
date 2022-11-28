@@ -106,11 +106,9 @@ def watch_path(path):
             current_files.remove(last_file)
             files_to_process = current_files - processed_files
 
-        # yield every file to process as a dask.delayed function object.
         for p in sorted(files_to_process, key=alphanumeric_key):
             yield delayed(imread)(os.path.join(path, p))
-        else:
-            yield
+        yield
 
         # add the files which we have yield to the processed list.
         processed_files.update(files_to_process)

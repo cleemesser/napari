@@ -118,9 +118,7 @@ class RowTable:
         int
             The maximum width of this column.
         """
-        if self.rows:
-            return max(len(str(row[index])) for row in self.rows)
-        return 0
+        return max(len(str(row[index])) for row in self.rows) if self.rows else 0
 
     def _get_widths(self) -> List[int]:
         """Return widths of all the columns."
@@ -158,15 +156,15 @@ class RowTable:
         for i, spec in enumerate(self.columns):
             width = widths[i]
             value = str(spec.name)
-            header_str += f"{value:<{width}}" + self.padding
+            header_str += f"{value:<{width}}{self.padding}"
         return header_str
 
     def get_row_str(self, row, widths: List[int]) -> str:
         """Get string depicting one row on the table."""
-        row_str = ""
-        for i, spec in enumerate(self.columns):
-            row_str += spec.format(row[i], widths[i]) + self.padding
-        return row_str
+        return "".join(
+            spec.format(row[i], widths[i]) + self.padding
+            for i, spec in enumerate(self.columns)
+        )
 
     def print(self):
         """Print the entire table both header and rows."""

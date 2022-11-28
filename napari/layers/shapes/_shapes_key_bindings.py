@@ -36,10 +36,10 @@ def hold_to_lock_aspect_ratio(layer: Shapes):
     box = layer._selected_box
     if box is not None:
         size = box[Box.BOTTOM_RIGHT] - box[Box.TOP_LEFT]
-        if not np.any(size == np.zeros(2)):
-            layer._aspect_ratio = abs(size[1] / size[0])
-        else:
-            layer._aspect_ratio = 1
+        layer._aspect_ratio = (
+            1 if np.any(size == np.zeros(2)) else abs(size[1] / size[0])
+        )
+
     else:
         layer._aspect_ratio = 1
     if layer._is_moving:

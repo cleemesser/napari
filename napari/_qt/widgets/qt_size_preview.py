@@ -111,7 +111,7 @@ class QtSizeSliderPreviewWidget(QWidget):
 
         description = description or ""
         preview_text = preview_text or ""
-        self._value = value if value else self.fontMetrics().height()
+        self._value = value or self.fontMetrics().height()
         self._min_value = min_value
         self._max_value = max_value
 

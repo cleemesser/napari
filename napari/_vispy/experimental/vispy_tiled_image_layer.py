@@ -267,29 +267,11 @@ class VispyTiledImageLayer(VispyImageLayer):
         int
             The number of chunks that still need to be added.
         """
-        if not self.layer.display.track_view:
-            # Tracking the view is the normal mode, where the tiles load in as
-            # the view moves. Not tracking the view is only used for debugging
-            # or demos. To show what were being drawn.
-            return 0  # Nothing more to add
-
-        # Add tiles for drawable chunks that do not already have a tile.
-        # This might not add all the chunks, because doing so might
-        # tank the framerate.
-        #
-        # Even though the chunks are already in RAM, we have to do some
-        # processing and then we have to move the data to VRAM. That time
-        # cost might not happen here, we probably are just queueing up a
-        # transfer that will happen when we next call glFlush() to let the
-        # card do its business.
-        #
-        # Any chunks not added this frame will have a chance to be added
-        # the next frame, if they are still on the drawable_chunks list
-        # next frame. It's important we keep asking the layer for the
-        # drawable chunks every frame. We don't want to queue up and add
-        # chunks which might no longer be needed. The camera might move
-        # every frame.
-        return self.node.add_chunks(drawable_chunks)
+        return (
+            self.node.add_chunks(drawable_chunks)
+            if self.layer.display.track_view
+            else 0
+        )
 
     def _on_loaded(self) -> None:
         """The layer loaded new data, so update our view."""

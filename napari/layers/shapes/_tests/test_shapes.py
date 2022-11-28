@@ -28,8 +28,7 @@ def _make_cycled_properties(values, length):
     cycled_properties : np.ndarray
         The property array comprising the cycled values.
     """
-    cycled_properties = np.array(list(islice(cycle(values), 0, length)))
-    return cycled_properties
+    return np.array(list(islice(cycle(values), 0, length)))
 
 
 def test_empty_shapes():
@@ -215,8 +214,7 @@ def test_setting_current_properties():
     }
 
     coerced_current_properties = layer.current_properties
-    for k, v in coerced_current_properties.items():
-        value = coerced_current_properties[k]
+    for k, value in coerced_current_properties.items():
         assert isinstance(value, np.ndarray)
         np.testing.assert_equal(value, expected_current_properties[k])
 
@@ -858,8 +856,9 @@ def test_paths_with_shape_type():
 
     # Test (list of paths, shape_type) tuple
     path_points = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(10)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(10)
     ]
+
     data = (path_points, "path")
     layer = Shapes(data)
     assert layer.nshapes == len(path_points)
@@ -880,8 +879,9 @@ def test_paths_roundtrip():
     """Test a full roundtrip with path data."""
     np.random.seed(0)
     data = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(10)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(10)
     ]
+
     layer = Shapes(data, shape_type='path')
     new_layer = Shapes(layer.data, shape_type='path')
     assert np.all(
@@ -953,8 +953,9 @@ def test_polygons_with_shape_type():
 
     # Test (list of polygons, shape_type) tuple
     polygons = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(10)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(10)
     ]
+
     data = (polygons, 'polygon')
     layer = Shapes(data)
     assert layer.nshapes == len(polygons)
@@ -975,8 +976,9 @@ def test_polygon_roundtrip():
     """Test a full roundtrip with polygon data."""
     np.random.seed(0)
     data = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(10)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(10)
     ]
+
     layer = Shapes(data, shape_type='polygon')
     new_layer = Shapes(layer.data, shape_type='polygon')
     assert np.all(
@@ -989,8 +991,9 @@ def test_mixed_shapes():
     # Test multiple polygons with different numbers of points
     np.random.seed(0)
     shape_vertices = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(5)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(5)
     ] + list(np.random.random((5, 4, 2)))
+
     shape_type = ['polygon'] * 5 + ['rectangle'] * 3 + ['ellipse'] * 2
     layer = Shapes(shape_vertices, shape_type=shape_type)
     assert layer.nshapes == len(shape_vertices)
@@ -1014,8 +1017,9 @@ def test_mixed_shapes_with_shape_type():
     """Test adding mixed shapes with shape_type in data"""
     np.random.seed(0)
     shape_vertices = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(5)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(5)
     ] + list(np.random.random((5, 4, 2)))
+
     shape_type = ['polygon'] * 5 + ['rectangle'] * 3 + ['ellipse'] * 2
 
     # Test multiple (shape, shape_type) tuples
@@ -1108,9 +1112,7 @@ def test_adding_shapes():
     """Test adding shapes."""
     # Start with polygons with different numbers of points
     np.random.seed(0)
-    data = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(5)
-    ]
+    data = [20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(5)]
     # shape_type = ['polygon'] * 5 + ['rectangle'] * 3 + ['ellipse'] * 2
     layer = Shapes(data, shape_type='polygon')
     new_data = np.random.random((5, 4, 2))
@@ -1144,8 +1146,9 @@ def test_adding_shapes_to_empty():
     assert len(layer.data) == 0
 
     data = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(5)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(5)
     ] + list(np.random.random((5, 4, 2)))
+
     shape_type = ['path'] * 5 + ['rectangle'] * 3 + ['ellipse'] * 2
 
     layer.add(data, shape_type=shape_type)
@@ -1167,7 +1170,7 @@ def test_selecting_shapes():
     assert layer.selected_data == {9}
 
     layer.selected_data = set()
-    assert layer.selected_data == set()
+    assert not layer.selected_data
 
 
 def test_removing_all_shapes_empty_list():
@@ -1196,8 +1199,9 @@ def test_removing_selected_shapes():
     """Test removing selected shapes."""
     np.random.seed(0)
     data = [
-        20 * np.random.random((np.random.randint(2, 12), 2)) for i in range(5)
+        20 * np.random.random((np.random.randint(2, 12), 2)) for _ in range(5)
     ] + list(np.random.random((5, 4, 2)))
+
     shape_type = ['polygon'] * 5 + ['rectangle'] * 3 + ['ellipse'] * 2
     layer = Shapes(data, shape_type=shape_type)
 
@@ -1212,7 +1216,7 @@ def test_removing_selected_shapes():
     data_keep = [data[i] for i in keep]
     shape_type_keep = [shape_type[i] for i in keep]
     assert len(layer.data) == len(data_keep)
-    assert len(layer.selected_data) == 0
+    assert not layer.selected_data
     assert np.all([np.all(ld == d) for ld, d in zip(layer.data, data_keep)])
     assert layer.ndim == 2
     assert np.all(
@@ -1291,13 +1295,13 @@ def test_visiblity():
     assert layer.visible is True
 
     layer.visible = False
-    assert layer.visible is False
+    assert not layer.visible
 
     layer = Shapes(data, visible=False)
-    assert layer.visible is False
+    assert not layer.visible
 
     layer.visible = True
-    assert layer.visible is True
+    assert layer.visible
 
 
 def test_opacity():
@@ -1789,7 +1793,7 @@ def test_edge_width():
 
     # Test setting edge width with number
     layer.edge_width = 4
-    assert all([width == 4 for width in layer.edge_width])
+    assert all(width == 4 for width in layer.edge_width)
 
     # Test setting edge width with list
     new_widths = [2] * 5 + [3] * 4
@@ -1834,7 +1838,7 @@ def test_z_index():
 
     # Test setting index with number
     layer.z_index = 4
-    assert all([idx == 4 for idx in layer.z_index])
+    assert all(idx == 4 for idx in layer.z_index)
 
     # Test setting index with list
     new_z_indices = [2] * 5 + [3] * 4

@@ -26,16 +26,16 @@ def generate_shapes(filename):
     all_shapes = None
 
     np.random.seed(0)
-    for k in range(shapes_per_slice):
-
+    for _ in range(shapes_per_slice):
         planes = np.tile(np.arange(128).reshape((128, 1, 1)), (1, 5, 1))
         corners = np.random.uniform(0, 128, size=(128, 5, 2))
         shapes = np.concatenate((planes, corners), axis=2)
 
-        if all_shapes is not None:
-            all_shapes = np.concatenate((all_shapes, shapes), axis=0)
-        else:
-            all_shapes = shapes
+        all_shapes = (
+            np.concatenate((all_shapes, shapes), axis=0)
+            if all_shapes is not None
+            else shapes
+        )
 
     print('all_shapes', all_shapes.shape)
 

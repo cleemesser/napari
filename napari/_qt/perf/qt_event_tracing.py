@@ -108,8 +108,4 @@ def _get_event_label(receiver: QWidget, event: QEvent) -> str:
         # Ignore "missing objectName attribute" during shutdown.
         object_name = None
 
-    if object_name:
-        return f"{event_str}:{object_name}"
-
-    # There was no object (pretty common).
-    return event_str
+    return f"{event_str}:{object_name}" if object_name else event_str

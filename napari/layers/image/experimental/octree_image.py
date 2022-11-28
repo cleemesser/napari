@@ -168,11 +168,7 @@ class _OctreeImageBase(_ImageBase):
         tuple
             The shape of a single tile.
         """
-        if self.multiscale:
-            init_shape = self.data[0].shape
-        else:
-            init_shape = self.data.shape
-
+        init_shape = self.data[0].shape if self.multiscale else self.data.shape
         tile_shape = (self.tile_size, self.tile_size)
 
         if self.rgb:
@@ -190,9 +186,7 @@ class _OctreeImageBase(_ImageBase):
         OctreeMetadata
             Octree dimensions and other info.
         """
-        if self._slice is None:
-            return None
-        return self._slice.meta
+        return None if self._slice is None else self._slice.meta
 
     @property
     def octree_level_info(self) -> OctreeLevelInfo:
@@ -203,9 +197,7 @@ class _OctreeImageBase(_ImageBase):
         OctreeLevelInfo
             Information about the current octree level.
         """
-        if self._slice is None:
-            return None
-        return self._slice.octree_level_info
+        return None if self._slice is None else self._slice.octree_level_info
 
     @property
     def data_level(self) -> int:

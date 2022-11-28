@@ -309,8 +309,7 @@ class QtDimSliderWidget(QWidget):
     def frame_range(self):
         """Frame range for animation, as (minimum_frame, maximum_frame)."""
         frame_range = (self._minframe, self._maxframe)
-        frame_range = frame_range if any(frame_range) else None
-        return frame_range
+        return frame_range if any(frame_range) else None
 
     @frame_range.setter
     def frame_range(self, value):

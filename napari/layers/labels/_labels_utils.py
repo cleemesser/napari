@@ -68,10 +68,7 @@ def sphere_indices(radius, scale):
 
     indices = np.mgrid[slices].T.reshape(-1, ndim)
     distances_sq = np.sum((indices * scale_normalized) ** 2, axis=1)
-    # Use distances within desired radius to mask indices in grid
-    mask_indices = indices[distances_sq <= radius**2].astype(int)
-
-    return mask_indices
+    return indices[distances_sq <= radius**2].astype(int)
 
 
 def indices_in_shape(idxs, shape):
@@ -131,12 +128,11 @@ def get_dtype(layer):
     if not isinstance(layer_data, list):
         layer_data = [layer_data]
     layer_data_level = layer_data[0]
-    if hasattr(layer_data_level, 'dtype'):
-        layer_dtype = layer_data_level[0].dtype
-    else:
-        layer_dtype = type(layer_data_level)
-
-    return layer_dtype
+    return (
+        layer_data_level[0].dtype
+        if hasattr(layer_data_level, 'dtype')
+        else type(layer_data_level)
+    )
 
 
 def first_nonzero_coordinate(data, start_point, end_point):
@@ -189,15 +185,13 @@ def mouse_event_to_labels_coordinate(layer, event):
     """
     ndim = len(layer._slice_input.displayed)
     if ndim == 2:
-        coordinates = layer.world_to_data(event.position)
-    else:  # 3d
-        start, end = layer.get_ray_intersections(
-            position=event.position,
-            view_direction=event.view_direction,
-            dims_displayed=layer._slice_input.displayed,
-            world=True,
-        )
-        if start is None and end is None:
-            return None
-        coordinates = first_nonzero_coordinate(layer.data, start, end)
-    return coordinates
+        return layer.world_to_data(event.position)
+    start, end = layer.get_ray_intersections(
+        position=event.position,
+        view_direction=event.view_direction,
+        dims_displayed=layer._slice_input.displayed,
+        world=True,
+    )
+    if start is None and end is None:
+        return None
+    return first_nonzero_coordinate(layer.data, start, end)

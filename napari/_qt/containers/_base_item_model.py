@@ -103,9 +103,7 @@ class _BaseEventedItemModel(QAbstractItemModel, Generic[ItemType]):
             return str(self.getItem(index))
         if role == ItemRole:
             return self.getItem(index)
-        if role == SortRole:
-            return index.row()
-        return None
+        return index.row() if role == SortRole else None
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         """Returns the item flags for the given `index`.

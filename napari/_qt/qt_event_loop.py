@@ -318,10 +318,7 @@ def _ipython_has_eventloop() -> bool:
         return False
 
     shell: InteractiveShell = ipy_module.get_ipython()  # type: ignore
-    if not shell:
-        return False
-
-    return shell.active_eventloop == 'qt'
+    return shell.active_eventloop == 'qt' if shell else False
 
 
 def _pycharm_has_eventloop(app: QApplication) -> bool:

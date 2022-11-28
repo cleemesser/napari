@@ -9,6 +9,7 @@ across the dimensions, specified by their size
 .. tags:: visualization-nD
 """
 
+
 import numpy as np
 from skimage import data
 import napari
@@ -29,7 +30,7 @@ face_feature = np.array(
     [True, True, True, True, False, False, False, False]
     * int(blobs.shape[0] / 2)
 )
-edge_feature = np.array(['A', 'B', 'C', 'D', 'E'] * int(len(points) / 5))
+edge_feature = np.array(['A', 'B', 'C', 'D', 'E'] * (len(points) // 5))
 
 features = {
     'face_feature': face_feature,

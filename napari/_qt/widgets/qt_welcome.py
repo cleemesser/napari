@@ -90,12 +90,12 @@ class QtWelcomeWidget(QWidget):
         return QSize(100, 100)
 
     def _show_shortcuts_updated(self):
-        shortcut_list = list(
+        if shortcut_list := list(
             action_manager._shortcuts["napari:show_shortcuts"]
-        )
-        if not shortcut_list:
+        ):
+            self._shortcut_label.setText(Shortcut(shortcut_list[0]).platform)
+        else:
             return
-        self._shortcut_label.setText(Shortcut(shortcut_list[0]).platform)
 
     def paintEvent(self, event):
         """Override Qt method.

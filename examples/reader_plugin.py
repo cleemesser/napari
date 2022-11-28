@@ -17,10 +17,7 @@ readable_extensions = tuple({x for f in formats for x in f.extensions})
 def napari_get_reader(path):
     """A basic implementation of the napari_get_reader hook specification."""
     # if we know we cannot read the file, we immediately return None.
-    if not path.endswith(readable_extensions):
-        return None
-    # otherwise we return the *function* that can read ``path``.
-    return reader_function
+    return reader_function if path.endswith(readable_extensions) else None
 
 
 def reader_function(path):

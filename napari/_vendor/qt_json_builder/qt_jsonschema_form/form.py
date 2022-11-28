@@ -7,9 +7,7 @@ from .defaults import compute_defaults
 
 
 def get_widget_state(schema, state=None):
-    if state is None:
-        return compute_defaults(schema)
-    return state
+    return compute_defaults(schema) if state is None else state
 
 
 def get_schema_type(schema: dict) -> str:

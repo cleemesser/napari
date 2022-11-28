@@ -224,8 +224,7 @@ class OctreeLoader:
                 ideal_chunk, create=False, in_memory=True
             )
             ancestors.append(chunk_ancestors)
-        common_ancestors = list(set.intersection(*map(set, ancestors)))
-        if len(common_ancestors) > 0:
+        if common_ancestors := list(set.intersection(*map(set, ancestors))):
             # Find the common ancestor with the smallest level, i.e. the highest
             # resolution
             level_indices = [c.location.level_index for c in common_ancestors]
@@ -303,11 +302,7 @@ class OctreeLoader:
 
         # If the ideal chunk is in memory then we'll want to draw that one
         # too though
-        if ideal_chunk.in_memory:
-            best_in_memory_chunk = [ideal_chunk]
-        else:
-            best_in_memory_chunk = []
-
+        best_in_memory_chunk = [ideal_chunk] if ideal_chunk.in_memory else []
         # First get any direct children which are in memory. Do not create
         # OctreeChunks or use children that are not already in memory
         # because it's better to create and load higher levels.
@@ -339,19 +334,17 @@ class OctreeLoader:
         if len(ancestors) > 0:
             ancestors = [ancestors[-1]]
         # Get the closest drawn ancestor
-        if len(drawn_ancestors) > 0:
+        if drawn_ancestors:
             drawn_ancestors = [drawn_ancestors[-1]]
 
-        # If the closest ancestor is drawn just take that one
         if len(ancestors) > 0 and ancestors == drawn_ancestors:
             return children + drawn_ancestors + best_in_memory_chunk
-        else:
             # If the ideal chunk is in memory take that one
-            if len(best_in_memory_chunk) > 0:
-                return children + drawn_ancestors + best_in_memory_chunk
-            else:
-                # Otherwise that the close in memory ancestor
-                return children + drawn_ancestors + ancestors
+        if best_in_memory_chunk:
+            return children + drawn_ancestors + best_in_memory_chunk
+        else:
+            # Otherwise that the close in memory ancestor
+            return children + drawn_ancestors + ancestors
 
     def _load_chunk(self, octree_chunk: OctreeChunk, priority: int) -> None:
         """Load the data for one OctreeChunk.

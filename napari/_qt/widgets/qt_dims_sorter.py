@@ -30,10 +30,7 @@ class AxisModel:
         return self.dims.axis_labels[self.axis]
 
     def __eq__(self, other: Union[int, str]) -> bool:
-        if isinstance(other, int):
-            return self.axis == other
-        else:
-            return repr(self) == other
+        return self.axis == other if isinstance(other, int) else repr(self) == other
 
 
 def set_dims_order(dims: Dims, order: Tuple[int, ...]):

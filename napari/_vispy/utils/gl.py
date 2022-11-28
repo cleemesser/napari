@@ -94,21 +94,20 @@ def fix_data_dtype(data):
     dtype = np.dtype(data.dtype)
     if dtype in texture_dtypes:
         return data
-    else:
-        try:
-            dtype = dict(i=np.float32, f=np.float32, u=np.uint16, b=np.uint8)[
-                dtype.kind
-            ]
-        except KeyError:  # not an int or float
-            raise TypeError(
-                trans._(
-                    'type {dtype} not allowed for texture; must be one of {textures}',  # noqa: E501
-                    deferred=True,
-                    dtype=dtype,
-                    textures=set(texture_dtypes),
-                )
+    try:
+        dtype = dict(i=np.float32, f=np.float32, u=np.uint16, b=np.uint8)[
+            dtype.kind
+        ]
+    except KeyError:  # not an int or float
+        raise TypeError(
+            trans._(
+                'type {dtype} not allowed for texture; must be one of {textures}',  # noqa: E501
+                deferred=True,
+                dtype=dtype,
+                textures=set(texture_dtypes),
             )
-        return data.astype(dtype)
+        )
+    return data.astype(dtype)
 
 
 BLENDING_MODES = {

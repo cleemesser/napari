@@ -89,14 +89,11 @@ class IntensityVisualizationMixin:
     def contrast_limits(self, contrast_limits):
         validate_2_tuple(contrast_limits)
         _validate_increasing(contrast_limits)
-        self._contrast_limits_msg = (
-            format_float(contrast_limits[0])
-            + ', '
-            + format_float(contrast_limits[1])
-        )
-        self._contrast_limits = contrast_limits
+        self._contrast_limits_msg = f'{format_float(contrast_limits[0])}, {format_float(contrast_limits[1])}'
+
         # make sure range slider is big enough to fit range
         newrange = list(self.contrast_limits_range)
+        self._contrast_limits = contrast_limits
         newrange[0] = min(newrange[0], contrast_limits[0])
         newrange[1] = max(newrange[1], contrast_limits[1])
         self.contrast_limits_range = newrange

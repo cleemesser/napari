@@ -748,7 +748,7 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
         state : dict
             Dictionary of attributes on base layer.
         """
-        base_dict = {
+        return {
             'name': self.name,
             'metadata': self.metadata,
             'scale': list(self.scale),
@@ -763,7 +763,6 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
                 plane.dict() for plane in self.experimental_clipping_planes
             ],
         }
-        return base_dict
 
     @abstractmethod
     def _get_state(self):
@@ -926,11 +925,7 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
     def _make_slice_input(
         self, point=None, ndisplay=2, order=None
     ) -> _SliceInput:
-        if point is None:
-            point = (0,) * self.ndim
-        else:
-            point = tuple(point)
-
+        point = (0,) * self.ndim if point is None else tuple(point)
         ndim = len(point)
 
         if order is None:
@@ -1002,9 +997,9 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
         """
         if self.visible:
             if world:
-                ndim_world = len(position)
-
                 if dims_displayed is not None:
+                    ndim_world = len(position)
+
                     # convert the dims_displayed to the layer dims.This accounts
                     # for differences in the number of dimensions in the world
                     # dims versus the layer and for transpose and rolls.
@@ -1015,28 +1010,27 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
                     )
                 position = self.world_to_data(position)
 
-            if (dims_displayed is not None) and (view_direction is not None):
-                if len(dims_displayed) == 2 or self.ndim == 2:
-                    value = self._get_value(position=tuple(position))
-
-                elif len(dims_displayed) == 3:
-                    view_direction = self._world_to_data_ray(
-                        list(view_direction)
-                    )
-                    start_point, end_point = self.get_ray_intersections(
-                        position=position,
-                        view_direction=view_direction,
-                        dims_displayed=dims_displayed,
-                        world=False,
-                    )
-                    value = self._get_value_3d(
-                        start_point=start_point,
-                        end_point=end_point,
-                        dims_displayed=dims_displayed,
-                    )
-            else:
+            if dims_displayed is None or view_direction is None:
                 value = self._get_value(position)
 
+            elif len(dims_displayed) == 2 or self.ndim == 2:
+                value = self._get_value(position=tuple(position))
+
+            elif len(dims_displayed) == 3:
+                view_direction = self._world_to_data_ray(
+                    list(view_direction)
+                )
+                start_point, end_point = self.get_ray_intersections(
+                    position=position,
+                    view_direction=view_direction,
+                    dims_displayed=dims_displayed,
+                    world=False,
+                )
+                value = self._get_value_3d(
+                    start_point=start_point,
+                    end_point=end_point,
+                    dims_displayed=dims_displayed,
+                )
         else:
             value = None
         # This should be removed as soon as possible, it is still
@@ -1427,7 +1421,7 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
             None is returned."""
         # get the view direction and click position in data coords
         # for the displayed dimensions only
-        if world is True:
+        if world:
             view_dir = self._world_to_displayed_data_ray(
                 view_direction, dims_displayed
             )
@@ -1528,7 +1522,7 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
             display_shape = tuple(
                 corners[1, displayed_axes] - corners[0, displayed_axes]
             )
-            if any(s == 0 for s in display_shape):
+            if 0 in display_shape:
                 return
             if self.data_level != level or not np.all(
                 self.corner_pixels == corners
@@ -1558,8 +1552,6 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
                 ).display_name
             except KeyError:
                 components['plugin'] = self.source.reader_plugin
-            return components
-
         elif self.source.sample:
             components['layer_base'] = self.name
             components['source_type'] = 'sample'
@@ -1569,19 +1561,16 @@ class Layer(KeymapProvider, MousemapProvider, ABC):
                 ).display_name
             except KeyError:
                 components['plugin'] = self.source.sample[0]
-            return components
-
         elif self.source.widget:
             components['layer_base'] = self.name
             components['source_type'] = 'widget'
             components['plugin'] = self.source.widget._function.__name__
-            return components
-
         else:
             components['layer_base'] = self.name
             components['source_type'] = ''
             components['plugin'] = ''
-            return components
+
+        return components
 
     def get_source_str(self):
 

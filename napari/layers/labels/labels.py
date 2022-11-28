@@ -540,11 +540,7 @@ class Labels(_ImageBase):
         if set(default_keys) != set(color.keys()):
             return False
 
-        for key in default_keys:
-            if not np.allclose(self._color[key], color[key]):
-                return False
-
-        return True
+        return all(np.allclose(self._color[key], color[key]) for key in default_keys)
 
     def _ensure_int_labels(self, data):
         """Ensure data is integer by converting from bool if required, raising an error otherwise."""
@@ -778,15 +774,15 @@ class Labels(_ImageBase):
         selected_label : int, optional
             Value of selected label to color, by default None
         """
-        if selected_label:
-            image = np.where(
+        return (
+            np.where(
                 im == selected_label,
                 low_discrepancy_image(selected_label, self._seed),
                 0,
             )
-        else:
-            image = np.where(im != 0, low_discrepancy_image(im, self._seed), 0)
-        return image
+            if selected_label
+            else np.where(im != 0, low_discrepancy_image(im, self._seed), 0)
+        )
 
     def _lookup_with_index(self, im, selected_label=None):
         """Returns display version of im using color lookup array by index
@@ -868,14 +864,13 @@ class Labels(_ImageBase):
         max_nbytes = max(data.nbytes, 1024)
         if data_range * nbytes_low_discrepancy > max_nbytes:
             return self._lookup_with_low_discrepancy_image
-        else:
-            if self._all_vals.size < data_range:
-                new_all_vals = low_discrepancy_image(
-                    np.arange(min_label_val0, max_label_val + 1), self._seed
-                )
-                self._all_vals = np.roll(new_all_vals, min_label_val0)
-                self._all_vals[0] = 0
-            return self._lookup_with_index
+        if self._all_vals.size < data_range:
+            new_all_vals = low_discrepancy_image(
+                np.arange(min_label_val0, max_label_val + 1), self._seed
+            )
+            self._all_vals = np.roll(new_all_vals, min_label_val0)
+            self._all_vals[0] = 0
+        return self._lookup_with_index
 
     def _raw_to_displayed(self, raw):
         """Determine displayed image from a saved raw image and a saved seed.
@@ -968,13 +963,12 @@ class Labels(_ImageBase):
     def get_color(self, label):
         """Return the color corresponding to a specific label."""
         if label == 0:
-            col = None
+            return None
         elif label is None:
-            col = self.colormap.map([0, 0, 0, 0])[0]
+            return self.colormap.map([0, 0, 0, 0])[0]
         else:
             val = self._raw_to_displayed(np.array([label]))
-            col = self.colormap.map(val)[0]
-        return col
+            return self.colormap.map(val)[0]
 
     def _get_value_ray(
         self,
@@ -1312,7 +1306,7 @@ class Labels(_ImageBase):
 
         # Transfer valid coordinates to slice_coord,
         # or expand coordinate if 3rd dim in 2D image
-        slice_coord_temp = [m for m in mask_indices.T]
+        slice_coord_temp = list(mask_indices.T)
         if self.n_edit_dimensions < self.ndim:
             for j, i in enumerate(dims_to_paint):
                 slice_coord[i] = slice_coord_temp[j]
@@ -1412,14 +1406,12 @@ class Labels(_ImageBase):
             position[-self.ndim :], value
         )
 
-        # if this labels layer has properties
-        properties = self._get_properties(
+        if properties := self._get_properties(
             position,
             view_direction=view_direction,
             dims_displayed=dims_displayed,
             world=world,
-        )
-        if properties:
+        ):
             source_info['coordinates'] += "; " + ", ".join(properties)
 
         return source_info

@@ -835,7 +835,7 @@ class ShapeList:
             Order that the dimensions are rendered in.
         """
         for index in range(len(self.shapes)):
-            if not self.shapes[index].dims_order == dims_order:
+            if self.shapes[index].dims_order != dims_order:
                 shape = self.shapes[index]
                 shape.dims_order = dims_order
                 self.remove(index, renumber=False)
@@ -1013,9 +1013,7 @@ class ShapeList:
         triangles = self._mesh.vertices[self._mesh.displayed_triangles]
         intersects = triangles_intersect_box(triangles, corners)
         shapes = self._mesh.displayed_triangles_index[intersects, 0]
-        shapes = np.unique(shapes).tolist()
-
-        return shapes
+        return np.unique(shapes).tolist()
 
     def inside(self, coord):
         """Determines if any shape at given coord by looking inside triangle
@@ -1074,20 +1072,18 @@ class ShapeList:
             triangles=triangles,
         )
         intersected_shapes = self._mesh.displayed_triangles_index[inside, 0]
-        if len(intersected_shapes) > 0:
-            intersection_points = self._triangle_intersection(
-                triangle_indices=inside,
-                ray_position=ray_position,
-                ray_direction=ray_direction,
-            )
-            start_to_intersection = intersection_points - ray_position
-            distances = np.linalg.norm(start_to_intersection, axis=1)
-            closest_shape_index = np.argmin(distances)
-            shape = intersected_shapes[closest_shape_index]
-            intersection = intersection_points[closest_shape_index]
-            return shape, intersection
-        else:
+        if len(intersected_shapes) <= 0:
             return None, None
+        intersection_points = self._triangle_intersection(
+            triangle_indices=inside,
+            ray_position=ray_position,
+            ray_direction=ray_direction,
+        )
+        start_to_intersection = intersection_points - ray_position
+        distances = np.linalg.norm(start_to_intersection, axis=1)
+        closest_shape_index = np.argmin(distances)
+        shape = intersected_shapes[closest_shape_index]
+        return shape, intersection_points[closest_shape_index]
 
     def _triangle_intersection(
         self,
@@ -1117,12 +1113,11 @@ class ShapeList:
         """
         triangles = self._mesh.vertices[self._mesh.displayed_triangles]
         intersected_triangles = triangles[triangle_indices]
-        intersection_points = intersect_line_with_triangles(
+        return intersect_line_with_triangles(
             line_point=ray_position,
             line_direction=ray_direction,
             triangles=intersected_triangles,
         )
-        return intersection_points
 
     def to_masks(self, mask_shape=None, zoom_factor=1, offset=[0, 0]):
         """Returns N binary masks, one for each shape, embedded in an array of
@@ -1149,14 +1144,12 @@ class ShapeList:
         if mask_shape is None:
             mask_shape = self.displayed_vertices.max(axis=0).astype('int')
 
-        masks = np.array(
+        return np.array(
             [
                 s.to_mask(mask_shape, zoom_factor=zoom_factor, offset=offset)
                 for s in self.shapes
             ]
         )
-
-        return masks
 
     def to_labels(self, labels_shape=None, zoom_factor=1, offset=[0, 0]):
         """Returns a integer labels image, where each shape is embedded in an
@@ -1241,7 +1234,7 @@ class ShapeList:
         # If there are too many shapes to render responsively, just render
         # the top max_shapes shapes
         if max_shapes is not None and len(z_order_in_view) > max_shapes:
-            z_order_in_view = z_order_in_view[0:max_shapes]
+            z_order_in_view = z_order_in_view[:max_shapes]
 
         for ind in z_order_in_view:
             mask = self.shapes[ind].to_mask(

@@ -406,13 +406,7 @@ class _ImageBase(IntensityVisualizationMixin, Layer):
     def _get_order(self) -> Tuple[int]:
         """Return the ordered displayed dimensions, but reduced to fit in the slice space."""
         order = reorder_after_dim_reduction(self._slice_input.displayed)
-        if self.rgb:
-            # if rgb need to keep the final axis fixed during the
-            # transpose. The index of the final axis depends on how many
-            # axes are displayed.
-            return order + (max(order) + 1,)
-        else:
-            return order
+        return order + (max(order) + 1,) if self.rgb else order
 
     @property
     def _data_view(self):
@@ -729,8 +723,7 @@ class _ImageBase(IntensityVisualizationMixin, Layer):
         image : array
             Displayed array.
         """
-        image = raw
-        return image
+        return raw
 
     def _set_view_slice(self) -> None:
         """Set the slice output based on this layer's current state."""
@@ -973,11 +966,7 @@ class _ImageBase(IntensityVisualizationMixin, Layer):
         coord = np.round(coord).astype(int)
 
         raw = self._slice.image.raw
-        if self.rgb:
-            shape = raw.shape[:-1]
-        else:
-            shape = raw.shape
-
+        shape = raw.shape[:-1] if self.rgb else raw.shape
         if self.ndim < len(coord):
             # handle 3D views of 2D data by omitting extra coordinate
             offset = len(coord) - len(shape)

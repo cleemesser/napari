@@ -134,7 +134,7 @@ class VispyInteractionBox:
 
             edge_color = self._highlight_color
             if self._interaction_box.show_vertices:
-                colors = np.array([(1.0, 1.0, 1.0) for point in box])
+                colors = np.array([(1.0, 1.0, 1.0) for _ in box])
                 if self._interaction_box.selected_vertex is not None:
                     colors[
                         self._interaction_box.selected_vertex

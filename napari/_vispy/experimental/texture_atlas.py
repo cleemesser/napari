@@ -107,7 +107,7 @@ class TileSpec(NamedTuple):
             Create a TileSpec based on this shape.
         """
         ndim = len(shape)
-        assert ndim in [2, 3]  # 2D or 2D with color.
+        assert ndim in {2, 3}
         height, width = shape[:2]
         depth = 1 if ndim == 2 else shape[2]
         return cls(shape, ndim, height, width, depth)
@@ -126,12 +126,7 @@ class TileSpec(NamedTuple):
         if self.ndim == 3 and self.depth != data.shape[2]:
             return False  # Different depths.
 
-        if data.shape[0] > self.height or data.shape[1] > self.width:
-            return False  # Data is too big for the tile.
-
-        # It's either an exact match, or it's compatible but smaller than
-        # the full tile, which is fine.
-        return True
+        return data.shape[0] <= self.height and data.shape[1] <= self.width
 
 
 class TextureAtlas2D(Texture2D):
@@ -173,7 +168,7 @@ class TextureAtlas2D(Texture2D):
         self.num_slots_total = shape_in_tiles[0] * shape_in_tiles[1]
 
         # Every index is free initially.
-        self._free_indices = set(range(0, self.num_slots_total))
+        self._free_indices = set(range(self.num_slots_total))
 
         # Pre-compute the texture coords for every tile. Otherwise we'd be
         # calculating these over and over as tiles are added. These are for

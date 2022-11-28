@@ -53,9 +53,7 @@ class InteractionBox(EventedModel):
         box = self._create_box_from_points()
         if box is None:
             return None
-        if self.transform:
-            return self.transform(box)
-        return box
+        return self.transform(box) if self.transform else box
 
     def _create_box_from_points(self):
         """Creates the axis aligned interaction box from the list of points"""
@@ -77,7 +75,7 @@ class InteractionBox(EventedModel):
             tr += np.array([0.5, -0.5])
             bl += np.array([0.5, 0.5])
             br += np.array([-0.5, 0.5])
-        box = np.array(
+        return np.array(
             [
                 tl,
                 (tl + tr) / 2,
@@ -90,4 +88,3 @@ class InteractionBox(EventedModel):
                 (tl + tr + br + bl) / 4,
             ]
         )
-        return box

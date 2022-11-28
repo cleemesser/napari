@@ -46,8 +46,7 @@ elif MACOS:
     EXT, OS = 'dmg', 'macOS'
 
 with open(os.path.join(HERE, "napari", "_version.py")) as f:
-    match = re.search(r'version\s?=\s?\'([^\']+)', f.read())
-    if match:
+    if match := re.search(r'version\s?=\s?\'([^\']+)', f.read()):
         VERSION = match.groups()[0].split('+')[0]
 
 
@@ -58,9 +57,7 @@ def patched_toml():
     requirements = parser.get("options", "install_requires").splitlines()
     requirements = [r.split('#')[0].strip() for r in requirements if r]
 
-    with open(PYPROJECT_TOML) as f:
-        original_toml = f.read()
-
+    original_toml = Path(PYPROJECT_TOML).read_text()
     toml = tomlkit.parse(original_toml)
 
     # Initialize EXTRA_REQS from setup.cfg 'options.extras_require.bundle_run'
@@ -137,8 +134,7 @@ def patched_dmgbuild():
     else:
         from dmgbuild import core
 
-        with open(core.__file__) as f:
-            src = f.read()
+        src = Path(core.__file__).read_text()
         with open(core.__file__, 'w') as f:
             f.write(
                 src.replace(
@@ -196,8 +192,7 @@ def patch_wxs():
     fname = os.path.join(BUILD_DIR, APP, f'{APP}.wxs')
 
     if os.path.exists(fname):
-        with open(fname) as f:
-            source = f.read()
+        source = Path(fname).read_text()
         with open(fname, 'w') as f:
             f.write(source.replace('pythonw.exe', 'python.exe'))
             print("patched pythonw.exe -> python.exe")
@@ -206,8 +201,9 @@ def patch_wxs():
 def patch_python_lib_location():
     # must run after briefcase create
     support = os.path.join(
-        BUILD_DIR, APP, APP + ".app", "Contents", "Resources", "Support"
+        BUILD_DIR, APP, f"{APP}.app", "Contents", "Resources", "Support"
     )
+
     python_resources = os.path.join(support, "Python", "Resources")
     if os.path.exists(python_resources):
         return
@@ -215,7 +211,7 @@ def patch_python_lib_location():
     for subdir in ("bin", "lib"):
         orig = os.path.join(support, subdir)
         dest = os.path.join(python_resources, subdir)
-        os.symlink("../../" + subdir, dest)
+        os.symlink(f"../../{subdir}", dest)
         print("symlinking", orig, "to", dest)
 
 

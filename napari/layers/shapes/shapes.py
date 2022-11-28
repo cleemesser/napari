@@ -473,11 +473,7 @@ class Shapes(Layer):
         # The following shape properties are for the new shapes that will
         # be drawn. Each shape has a corresponding property with the
         # value for itself
-        if np.isscalar(edge_width):
-            self._current_edge_width = edge_width
-        else:
-            self._current_edge_width = 1
-
+        self._current_edge_width = edge_width if np.isscalar(edge_width) else 1
         self._data_view = ShapeList(ndisplay=self._slice_input.ndisplay)
         self._data_view.slice_key = np.array(self._slice_indices)[
             self._slice_input.not_displayed
@@ -749,10 +745,7 @@ class Shapes(Layer):
 
     def _get_ndim(self):
         """Determine number of dimensions of the layer."""
-        if self.nshapes == 0:
-            ndim = self.ndim
-        else:
-            ndim = self.data[0].shape[1]
+        ndim = self.ndim if self.nshapes == 0 else self.data[0].shape[1]
         return ndim
 
     @property
@@ -764,12 +757,10 @@ class Shapes(Layer):
         extent_data : array, shape (2, D)
         """
         if len(self.data) == 0:
-            extrema = np.full((2, self.ndim), np.nan)
-        else:
-            maxs = np.max([np.max(d, axis=0) for d in self.data], axis=0)
-            mins = np.min([np.min(d, axis=0) for d in self.data], axis=0)
-            extrema = np.vstack([mins, maxs])
-        return extrema
+            return np.full((2, self.ndim), np.nan)
+        maxs = np.max([np.max(d, axis=0) for d in self.data], axis=0)
+        mins = np.min([np.min(d, axis=0) for d in self.data], axis=0)
+        return np.vstack([mins, maxs])
 
     @property
     def nshapes(self):
@@ -1023,22 +1014,7 @@ class Shapes(Layer):
         elif color_mode in (ColorMode.CYCLE, ColorMode.COLORMAP):
             color_property = getattr(self, f'_{attribute}_color_property')
             if color_property == '':
-                if self.properties:
-                    new_color_property = next(iter(self.properties))
-                    setattr(
-                        self,
-                        f'_{attribute}_color_property',
-                        new_color_property,
-                    )
-                    warnings.warn(
-                        trans._(
-                            '_{attribute}_color_property was not set, setting to: {new_color_property}',
-                            deferred=True,
-                            attribute=attribute,
-                            new_color_property=new_color_property,
-                        )
-                    )
-                else:
+                if not self.properties:
                     raise ValueError(
                         trans._(
                             'There must be a valid Shapes.properties to use {color_mode}',
@@ -1047,6 +1023,20 @@ class Shapes(Layer):
                         )
                     )
 
+                new_color_property = next(iter(self.properties))
+                setattr(
+                    self,
+                    f'_{attribute}_color_property',
+                    new_color_property,
+                )
+                warnings.warn(
+                    trans._(
+                        '_{attribute}_color_property was not set, setting to: {new_color_property}',
+                        deferred=True,
+                        attribute=attribute,
+                        new_color_property=new_color_property,
+                    )
+                )
             # ColorMode.COLORMAP can only be applied to numeric properties
             color_property = getattr(self, f'_{attribute}_color_property')
             if (color_mode == ColorMode.COLORMAP) and not issubclass(
@@ -1102,7 +1092,7 @@ class Shapes(Layer):
             width of all shapes, or each shape if list
         """
         if isinstance(width, list):
-            if not len(width) == self.nshapes:
+            if len(width) != self.nshapes:
                 raise ValueError(
                     trans._('Length of list does not match number of shapes')
                 )
@@ -1131,7 +1121,7 @@ class Shapes(Layer):
             z-index of shapes
         """
         if isinstance(z_index, list):
-            if not len(z_index) == self.nshapes:
+            if len(z_index) != self.nshapes:
                 raise ValueError(
                     trans._('Length of list does not match number of shapes')
                 )
@@ -1186,11 +1176,10 @@ class Shapes(Layer):
                 with self.block_update_properties():
                     self.current_edge_width = unique_edge_width
 
-            unique_properties = {}
-            for k, v in self.properties.items():
-                unique_properties[k] = _unique_element(
-                    v[selected_data_indices]
-                )
+            unique_properties = {
+                k: _unique_element(v[selected_data_indices])
+                for k, v in self.properties.items()
+            }
 
             if all(p is not None for p in unique_properties.values()):
                 with self.block_update_properties():
@@ -1467,10 +1456,7 @@ class Shapes(Layer):
     def _is_color_mapped(self, color):
         """determines if the new color argument is for directly setting or cycle/colormap"""
         if isinstance(color, str):
-            if color in self.properties:
-                return True
-            else:
-                return False
+            return color in self.properties
         elif isinstance(color, (list, np.ndarray)):
             return False
         else:
@@ -1622,7 +1608,7 @@ class Shapes(Layer):
 
         # don't update thumbnail on mode changes
         with self.block_thumbnail_update():
-            if not (mode in draw_modes and old_mode in draw_modes):
+            if mode not in draw_modes or old_mode not in draw_modes:
                 # Shapes._finish_drawing() calls Shapes.refresh()
                 self._finish_drawing()
             else:
@@ -1631,11 +1617,7 @@ class Shapes(Layer):
     def _set_editable(self, editable=None):
         """Set editable mode based on layer properties."""
         if editable is None:
-            if self._slice_input.ndisplay == 3:
-                self.editable = False
-            else:
-                self.editable = True
-
+            self.editable = self._slice_input.ndisplay != 3
         if not self.editable:
             self.mode = Mode.PAN_ZOOM
 
@@ -1986,15 +1968,16 @@ class Shapes(Layer):
             face_color = self._get_new_shape_color(
                 n_new_shapes, attribute='face'
             )
-        if self._data_view is not None:
-            z_index = z_index or max(self._data_view._z_index, default=-1) + 1
-        else:
-            z_index = z_index or 0
-
         if n_new_shapes > 0:
             total_shapes = n_new_shapes + self.nshapes
             self._feature_table.resize(total_shapes)
             self.text.apply(self.features)
+            z_index = (
+                z_index or max(self._data_view._z_index, default=-1) + 1
+                if self._data_view is not None
+                else z_index or 0
+            )
+
             self._add_shapes(
                 data,
                 shape_type=shape_type,
@@ -2263,13 +2246,13 @@ class Shapes(Layer):
     def _set_view_slice(self):
         """Set the view given the slicing indices."""
         ndisplay = self._slice_input.ndisplay
-        if not ndisplay == self._ndisplay_stored:
+        if ndisplay != self._ndisplay_stored:
             self.selected_data = set()
             self._data_view.ndisplay = min(self.ndim, ndisplay)
             self._ndisplay_stored = ndisplay
             self._clipboard = {}
 
-        if not self._slice_input.order == self._display_order_stored:
+        if self._slice_input.order != self._display_order_stored:
             self.selected_data = set()
             self._data_view.update_dims_order(self._slice_input.order)
             self._display_order_stored = copy(self._slice_input.order)
@@ -2348,11 +2331,8 @@ class Shapes(Layer):
         ):
             if len(self.selected_data) > 0:
                 index = list(self.selected_data)
-                if self._value[0] is not None:
-                    if self._value[0] in index:
-                        pass
-                    else:
-                        index.append(self._value[0])
+                if self._value[0] is not None and self._value[0] not in index:
+                    index.append(self._value[0])
                 index.sort()
             else:
                 index = self._value[0]
@@ -2390,9 +2370,7 @@ class Shapes(Layer):
                 # If in select mode just show the interaction boudning box
                 # including its vertices and the rotation handle
                 box = self._selected_box[Box.WITH_HANDLE]
-                if self._value[0] is None:
-                    face_color = 'white'
-                elif self._value[1] is None:
+                if self._value[0] is None or self._value[1] is None:
                     face_color = 'white'
                 else:
                     face_color = self._highlight_color
@@ -2423,9 +2401,7 @@ class Shapes(Layer):
                 if self._mode == Mode.ADD_PATH:
                     vertices = vertices[:-1]
 
-                if self._value[0] is None:
-                    face_color = 'white'
-                elif self._value[1] is None:
+                if self._value[0] is None or self._value[1] is None:
                     face_color = 'white'
                 else:
                     face_color = self._highlight_color

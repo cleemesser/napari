@@ -136,8 +136,7 @@ class VispyPointsLayer(VispyBaseLayer):
 
     def _get_text_node(self):
         """Function to get the text node from the Compound visual"""
-        text_node = self.node._subvisuals[-1]
-        return text_node
+        return self.node._subvisuals[-1]
 
     def _on_text_change(self, event=None):
         if event is not None:
@@ -168,10 +167,7 @@ class VispyPointsLayer(VispyBaseLayer):
 
     def _on_shading_change(self):
         shading = self.layer.shading
-        if shading == 'spherical':
-            self.node.spherical = True
-        else:
-            self.node.spherical = False
+        self.node.spherical = shading == 'spherical'
 
     def _on_canvas_size_limits_change(self):
         self.node.canvas_size_limits = self.layer.canvas_size_limits

@@ -49,11 +49,12 @@ class RemoteMessages:
         """
         self._frame_number += 1
 
-        layers: Dict[int, dict] = {}
+        layers: Dict[int, dict] = {
+            id(layer): layer.remote_messages
+            for layer in self.layers
+            if isinstance(layer, _OctreeImageBase)
+        }
 
-        for layer in self.layers:
-            if isinstance(layer, _OctreeImageBase):
-                layers[id(layer)] = layer.remote_messages
 
         monitor.add_data({"poll": {"layers": layers}})
         self._send_frame_time()

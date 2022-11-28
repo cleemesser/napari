@@ -18,10 +18,7 @@ def macos_supported_version():
         return True
     else:
         minor = int(sysver.split('.')[1])
-        if minor < 14:
-            return False
-        else:
-            return True
+        return minor >= 14
 
 if sys.platform == "darwin":
     if macos_supported_version():

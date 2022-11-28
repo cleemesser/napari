@@ -37,8 +37,7 @@ def _make_cycled_properties(values, length):
     cycled_properties : np.ndarray
         The property array comprising the cycled values.
     """
-    cycled_properties = np.array(list(islice(cycle(values), 0, length)))
-    return cycled_properties
+    return np.array(list(islice(cycle(values), 0, length)))
 
 
 def test_empty_points():
@@ -322,7 +321,7 @@ def test_selecting_points():
 
     # add mode should clear the selection
     layer.mode = 'add'
-    assert layer.selected_data == set()
+    assert not layer.selected_data
 
 
 def test_adding_points():
@@ -379,7 +378,7 @@ def test_removing_selected_points():
     layer.selected_data = {0, 3}
     layer.remove_selected()
     assert len(layer.data) == shape[0] - 2
-    assert len(layer.selected_data) == 0
+    assert not layer.selected_data
     keep = [1, 2] + list(range(4, 10))
     assert np.all(layer.data == data[keep])
     assert layer._value is None
@@ -539,13 +538,13 @@ def test_visibility():
     assert layer.visible is True
 
     layer.visible = False
-    assert layer.visible is False
+    assert not layer.visible
 
     layer = Points(data, visible=False)
-    assert layer.visible is False
+    assert not layer.visible
 
     layer.visible = True
-    assert layer.visible is True
+    assert layer.visible
 
 
 def test_opacity():
@@ -754,8 +753,7 @@ def test_setting_current_properties():
     }
 
     coerced_current_properties = layer.current_properties
-    for k, v in coerced_current_properties.items():
-        value = coerced_current_properties[k]
+    for k, value in coerced_current_properties.items():
         assert isinstance(value, np.ndarray)
         np.testing.assert_equal(value, expected_current_properties[k])
 
@@ -917,15 +915,12 @@ def test_edge_width():
     # all should work on instantiation too
     layer = Points(data, edge_width=3, edge_width_is_relative=False)
     np.testing.assert_array_equal(layer.edge_width, 3)
-    assert layer.edge_width_is_relative is False
+    assert not layer.edge_width_is_relative
     with pytest.raises(ValueError):
         layer.edge_width = -2
 
 
-@pytest.mark.parametrize(
-    "edge_width",
-    [int(1), float(1), np.array([1, 2, 3, 4, 5]), [1, 2, 3, 4, 5]],
-)
+@pytest.mark.parametrize("edge_width", [1, float(1), np.array([1, 2, 3, 4, 5]), [1, 2, 3, 4, 5]])
 def test_edge_width_types(edge_width):
     """Test edge_width dtypes with valid values"""
     shape = (5, 2)
@@ -935,10 +930,7 @@ def test_edge_width_types(edge_width):
     np.testing.assert_array_equal(layer.edge_width, edge_width)
 
 
-@pytest.mark.parametrize(
-    "edge_width",
-    [int(-1), float(-1), np.array([-1, 2, 3, 4, 5]), [-1, 2, 3, 4, 5]],
-)
+@pytest.mark.parametrize("edge_width", [-1, float(-1), np.array([-1, 2, 3, 4, 5]), [-1, 2, 3, 4, 5]])
 def test_edge_width_types_negative(edge_width):
     """Test negative values in all edge_width dtypes"""
     shape = (5, 2)
@@ -957,21 +949,21 @@ def test_out_of_slice_display():
     assert layer.out_of_slice_display is False
 
     layer.out_of_slice_display = True
-    assert layer.out_of_slice_display is True
+    assert layer.out_of_slice_display
 
     layer = Points(data, out_of_slice_display=True)
-    assert layer.out_of_slice_display is True
+    assert layer.out_of_slice_display
 
     shape = (10, 4)
     data = 20 * np.random.random(shape)
     layer = Points(data)
-    assert layer.out_of_slice_display is False
+    assert not layer.out_of_slice_display
 
     layer.out_of_slice_display = True
-    assert layer.out_of_slice_display is True
+    assert layer.out_of_slice_display
 
     layer = Points(data, out_of_slice_display=True)
-    assert layer.out_of_slice_display is True
+    assert layer.out_of_slice_display
 
 
 @pytest.mark.parametrize("attribute", ['edge', 'face'])
@@ -2514,4 +2506,4 @@ def test_point_slice_request_response(dims_indices, target_indices):
     response = request()
 
     assert len(response.indices) == len(target_indices)
-    assert all([a == b for a, b in zip(response.indices, target_indices)])
+    assert all(a == b for a, b in zip(response.indices, target_indices))

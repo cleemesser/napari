@@ -89,10 +89,7 @@ def _get_shape_str(layer):
 
     data = layer.data
     if isinstance(data, list):
-        if len(data) == 0:
-            return "NONE"  # Shape layer is empty list?
-        return f"{data[0].shape}"  # Multi-scale
-
+        return "NONE" if len(data) == 0 else f"{data[0].shape}"
     # Not a list.
     return str(data.shape)
 
@@ -147,9 +144,7 @@ class ChunkLoaderLayers:
         int
             The number of levels of the data.
         """
-        if isinstance(data, list):
-            return len(data)
-        return 1
+        return len(data) if isinstance(data, list) else 1
 
     def _add_row(self, index: int, layer: Layer) -> int:
         """Add row describing one layer.
@@ -212,7 +207,7 @@ class LevelsTable:
         data = layer.data
         if isinstance(data, list):
             for i, level in enumerate(data):
-                shape_str = level.shape if level.shape else "NONE"
+                shape_str = level.shape or "NONE"
                 size_str = naturalsize(level.nbytes, gnu=True)
                 self.table.add_row([i, shape_str, size_str])
 
