@@ -26,7 +26,7 @@ class Shapes2DSuite:
 
     def setup(self, n):
         np.random.seed(0)
-        self.data = [50 * np.random.random((6, 2)) for i in range(n)]
+        self.data = [50 * np.random.random((6, 2)) for _ in range(n)]
         self.layer = Shapes(self.data, shape_type='polygon')
 
     def time_create_layer(self, n):
@@ -65,7 +65,7 @@ class Shapes3DSuite:
 
     def setup(self, n):
         np.random.seed(0)
-        self.data = [50 * np.random.random((6, 3)) for i in range(n)]
+        self.data = [50 * np.random.random((6, 3)) for _ in range(n)]
         self.layer = Shapes(self.data, shape_type='polygon')
 
     def time_create_layer(self, n):
@@ -104,7 +104,7 @@ class ShapesInteractionSuite:
 
     def setup(self, n):
         np.random.seed(0)
-        self.data = [50 * np.random.random((6, 2)) for i in range(n)]
+        self.data = [50 * np.random.random((6, 2)) for _ in range(n)]
         self.layer = Shapes(self.data, shape_type='polygon')
         self.layer.mode = 'select'
 

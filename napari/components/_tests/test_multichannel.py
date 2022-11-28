@@ -26,27 +26,18 @@ MULTI_TUPLES = [[0.3, 0.7], [0.1, 0.9], [0.3, 0.9], [0.4, 0.9], [0.2, 0.9]]
 # data shape is (15, 10, 5) unless otherwise set
 # channel_axis = -1 is implied unless otherwise set
 multi_channel_test_data = [
-    # basic multichannel image
     ((), {}),
-    # single channel
     ((15, 10, 1), {}),
-    # two channels
     ((15, 10, 2), {}),
-    # Test adding multichannel image with color channel set.
     ((5, 10, 15), {'channel_axis': 0}),
-    # split single RGB image
     ((15, 10, 3), {'colormap': ['red', 'green', 'blue']}),
-    # multiple RGB images
     ((15, 10, 5, 3), {'channel_axis': 2, 'rgb': True}),
-    # Test adding multichannel image with custom names.
-    ((), {'name': ['multi ' + str(i + 3) for i in range(5)]}),
-    # Test adding multichannel image with custom contrast limits.
+    ((), {'name': [f'multi {str(i + 3)}' for i in range(5)]}),
     ((), {'contrast_limits': [0.3, 0.7]}),
     ((), {'contrast_limits': MULTI_TUPLES}),
     ((), {'gamma': 0.5}),
     ((), {'gamma': [0.3, 0.4, 0.5, 0.6, 0.7]}),
     ((), {'visible': [True, False, False, True, True]}),
-    # Test adding multichannel image with custom colormaps.
     ((), {'colormap': 'gray'}),
     ((), {'colormap': green_cmap}),
     ((), {'colormap': cmap_tuple}),
@@ -61,9 +52,10 @@ multi_channel_test_data = [
     ((), {'translate': MULTI_TUPLES}),
     ((), {'blending': 'translucent'}),
     ((), {'metadata': {'hi': 'there'}}),
-    ((), {'metadata': {k: v for k, v in MULTI_TUPLES}}),
+    ((), {'metadata': dict(MULTI_TUPLES)}),
     ((), {'experimental_clipping_planes': []}),
 ]
+
 
 ids = [
     'basic_multichannel',

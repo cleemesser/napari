@@ -31,20 +31,27 @@ def select(layer, event):
     layer._moving_value = copy(value)
     shape_under_cursor, vertex_under_cursor = value
     if vertex_under_cursor is None:
-        if shift and shape_under_cursor is not None:
-            if shape_under_cursor in layer.selected_data:
-                layer.selected_data.remove(shape_under_cursor)
-            else:
-                if len(layer.selected_data):
-                    # one or more shapes already selected
-                    layer.selected_data.add(shape_under_cursor)
-                else:
-                    # first shape being selected
-                    layer.selected_data = {shape_under_cursor}
-        elif shape_under_cursor is not None:
-            if shape_under_cursor not in layer.selected_data:
-                layer.selected_data = {shape_under_cursor}
-        else:
+        if (
+            shift
+            and shape_under_cursor is not None
+            and shape_under_cursor not in layer.selected_data
+            and len(layer.selected_data)
+        ):
+            # one or more shapes already selected
+            layer.selected_data.add(shape_under_cursor)
+        elif (
+            shift
+            and shape_under_cursor is not None
+            and shape_under_cursor not in layer.selected_data
+            or (not shift or shape_under_cursor is None)
+            and shape_under_cursor is not None
+            and shape_under_cursor not in layer.selected_data
+        ):
+            # first shape being selected
+            layer.selected_data = {shape_under_cursor}
+        elif shift and shape_under_cursor is not None:
+            layer.selected_data.remove(shape_under_cursor)
+        elif shape_under_cursor is None:
             layer.selected_data = set()
     layer._set_highlight()
 
@@ -201,10 +208,7 @@ def add_path_polygon(layer, event):
     else:
         # Add to an existing path or polygon
         index = layer._moving_value[0]
-        if layer._mode == Mode.ADD_POLYGON:
-            new_type = Polygon
-        else:
-            new_type = None
+        new_type = Polygon if layer._mode == Mode.ADD_POLYGON else None
         vertices = layer._data_view.shapes[index].data
         vertices = np.concatenate((vertices, [coordinates]), axis=0)
         # Change the selected vertex
@@ -234,10 +238,7 @@ def vertex_insert(layer, event):
     all_edges_shape = np.empty((0, 2), dtype=int)
     for index in layer.selected_data:
         shape_type = type(layer._data_view.shapes[index])
-        if shape_type == Ellipse:
-            # Adding vertex to ellipse not implemented
-            pass
-        else:
+        if shape_type != Ellipse:
             vertices = layer._data_view.displayed_vertices[
                 layer._data_view.displayed_index == index
             ]
@@ -329,11 +330,7 @@ def vertex_remove(layer, event):
             shapes = layer.selected_data
             layer._selected_box = layer.interaction_box(shapes)
     else:
-        if shape_type == Rectangle:
-            # Deleting vertex from a rectangle creates a polygon
-            new_type = Polygon
-        else:
-            new_type = None
+        new_type = Polygon if shape_type == Rectangle else None
         # Remove clicked on vertex
         vertices = np.delete(vertices, vertex_under_cursor, axis=0)
         with layer.events.set_data.blocker():
@@ -521,14 +518,8 @@ def _move(layer, coordinates):
             layer._is_moving = True
             index = layer._moving_value[0]
             shape_type = type(layer._data_view.shapes[index])
-            if shape_type == Ellipse:
-                # DIRECT vertex moving of ellipse not implemented
-                pass
-            else:
-                if shape_type == Rectangle:
-                    new_type = Polygon
-                else:
-                    new_type = None
+            if shape_type != Ellipse:
+                new_type = Polygon if shape_type == Rectangle else None
                 vertices = layer._data_view.shapes[index].data
                 vertices[vertex] = coordinates
                 layer._data_view.edit(index, vertices, new_type=new_type)

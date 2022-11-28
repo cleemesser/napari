@@ -21,7 +21,7 @@ reps = 100
 
 # Profiling
 with cProfile.Profile() as pr:
-    for k in range(reps):
+    for _ in range(reps):
         layer = Points(data)
         layer._set_view_slice()
 

@@ -88,16 +88,17 @@ def _npe2_decode_selected_filter(
     When npe2 can be imported, resolves a selected file extension
     string into a specific writer. Otherwise, returns None.
     """
-    # When npe2 is not present, `writers` is expected to be an empty list,
-    # `[]`. This function will return None.
-
-    for entry, writer in zip(
-        ext_str.split(";;"),
-        writers,
-    ):
-        if entry.startswith(selected_filter):
-            return writer
-    return None
+    return next(
+        (
+            writer
+            for entry, writer in zip(
+                ext_str.split(";;"),
+                writers,
+            )
+            if entry.startswith(selected_filter)
+        ),
+        None,
+    )
 
 
 def _extension_string_for_layers(

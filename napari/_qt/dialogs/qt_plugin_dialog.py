@@ -1018,10 +1018,7 @@ class QtPluginDialog(QDialog):
     def _install_packages(self, packages: Sequence[str] = ()):
         if not packages:
             _packages = self.direct_entry_edit.text()
-            if os.path.exists(_packages):
-                packages = [_packages]
-            else:
-                packages = _packages.split()
+            packages = [_packages] if os.path.exists(_packages) else _packages.split()
             self.direct_entry_edit.clear()
 
         if packages:

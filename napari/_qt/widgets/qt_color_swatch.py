@@ -107,8 +107,7 @@ class QColorSwatchEdit(QWidget):
     def _on_line_edit_edited(self):
         """When the user hits enter or loses focus on the LineEdit widget."""
         text = self.line_edit.text()
-        rgb_match = rgba_regex.match(text)
-        if rgb_match:
+        if rgb_match := rgba_regex.match(text):
             text = [float(x) for x in rgb_match.groups() if x]
         self.color_swatch.setColor(text)
 

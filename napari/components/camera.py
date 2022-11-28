@@ -51,12 +51,11 @@ class Camera(EventedModel):
         system for three currently displayed dimensions.
         """
         ang = np.deg2rad(self.angles)
-        view_direction = (
+        return (
             np.sin(ang[2]) * np.cos(ang[1]),
             np.cos(ang[2]) * np.cos(ang[1]),
             -np.sin(ang[1]),
         )
-        return view_direction
 
     @property
     def up_direction(self) -> Tuple[float, float, float]:

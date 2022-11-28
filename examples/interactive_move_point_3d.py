@@ -45,7 +45,7 @@ point_layer = viewer.add_points(
 @point_layer.mouse_drag_callbacks.append
 def drag_along_camera_plane(layer, event):
     # early exit if shift isn't held
-    if not 'Shift' in event.modifiers:
+    if 'Shift' not in event.modifiers:
         return
 
     # disable interactivity during this drag event to fix the view direction

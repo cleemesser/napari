@@ -159,7 +159,7 @@ def test_changing_modes():
     assert layer.mode == 'paint'
     layer.editable = False
     assert layer.mode == 'pan_zoom'
-    assert layer.editable is False
+    assert not layer.editable
 
 
 def test_name():
@@ -184,13 +184,13 @@ def test_visiblity():
     assert layer.visible is True
 
     layer.visible = False
-    assert layer.visible is False
+    assert not layer.visible
 
     layer = Labels(data, visible=False)
-    assert layer.visible is False
+    assert not layer.visible
 
     layer.visible = True
-    assert layer.visible is True
+    assert layer.visible
 
 
 def test_opacity():
@@ -325,7 +325,7 @@ def test_default_properties_assignment():
 
     layer = Labels(data)
     layer.properties = {}
-    assert layer.properties == {}
+    assert not layer.properties
 
 
 def test_multiscale_properties():
@@ -444,9 +444,7 @@ def test_large_custom_color_dict():
     label_color_controls = [
         layer._label_color_index[x] for x in range(label_count)
     ]
-    vispy_colors = vispy_colormap.map(
-        np.array([x for x in label_color_controls])
-    )
+    vispy_colors = vispy_colormap.map(np.array(list(label_color_controls)))
 
     assert (label_color == vispy_colors).all()
 
@@ -507,7 +505,7 @@ def test_contiguous():
     assert layer.contiguous is True
 
     layer.contiguous = False
-    assert layer.contiguous is False
+    assert not layer.contiguous
 
 
 def test_n_edit_dimensions():

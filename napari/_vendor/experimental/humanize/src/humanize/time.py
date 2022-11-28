@@ -139,33 +139,27 @@ def naturaldelta(value, months=True, minimum_unit="seconds"):
             return ngettext("%d minute", "%d minutes", minutes) % minutes
         elif 3600 <= seconds < 3600 * 2:
             return _("an hour")
-        elif 3600 < seconds:
+        elif seconds > 3600:
             hours = seconds // 3600
             return ngettext("%d hour", "%d hours", hours) % hours
     elif years == 0:
         if days == 1:
             return _("a day")
-        if not use_months:
+        if use_months and not months or not use_months:
             return ngettext("%d day", "%d days", days) % days
+        elif months == 1:
+            return _("a month")
         else:
-            if not months:
-                return ngettext("%d day", "%d days", days) % days
-            elif months == 1:
-                return _("a month")
-            else:
-                return ngettext("%d month", "%d months", months) % months
+            return ngettext("%d month", "%d months", months) % months
     elif years == 1:
-        if not months and not days:
+        if (months or days) and months and use_months and months == 1:
+            return _("1 year, 1 month")
+        elif (months or days) and months and use_months:
+            return (
+                ngettext("1 year, %d month", "1 year, %d months", months) % months
+            )
+        elif not months and not days:
             return _("a year")
-        elif not months:
-            return ngettext("1 year, %d day", "1 year, %d days", days) % days
-        elif use_months:
-            if months == 1:
-                return _("1 year, 1 month")
-            else:
-                return (
-                    ngettext("1 year, %d month", "1 year, %d months", months) % months
-                )
         else:
             return ngettext("1 year, %d day", "1 year, %d days", days) % days
     else:
@@ -200,10 +194,7 @@ def naturaltime(value, future=False, months=True, minimum_unit="seconds"):
     ago = _("%s from now") if future else _("%s ago")
     delta = naturaldelta(delta, months, minimum_unit)
 
-    if delta == _("a moment"):
-        return _("now")
-
-    return ago % delta
+    return _("now") if delta == _("a moment") else ago % delta
 
 
 def naturalday(value, format="%b %d"):
@@ -212,11 +203,8 @@ def naturalday(value, format="%b %d"):
     formatted according to `format`."""
     try:
         value = dt.date(value.year, value.month, value.day)
-    except AttributeError:
+    except (AttributeError, OverflowError, ValueError):
         # Passed value wasn't date-ish
-        return value
-    except (OverflowError, ValueError):
-        # Date arguments out of range
         return value
     delta = value - dt.date.today()
     if delta.days == 0:
@@ -233,11 +221,8 @@ def naturaldate(value):
     """
     try:
         value = dt.date(value.year, value.month, value.day)
-    except AttributeError:
+    except (AttributeError, OverflowError, ValueError):
         # Passed value wasn't date-ish
-        return value
-    except (OverflowError, ValueError):
-        # Date arguments out of range
         return value
     delta = abs_timedelta(value - dt.date.today())
     if delta.days >= 5 * 365 / 12:

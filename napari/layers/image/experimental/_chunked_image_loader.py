@@ -52,10 +52,7 @@ class ChunkedImageLoader(ImageLoader):
         # Now "showing" this slice, even if it hasn't loaded yet.
         self._current = location
 
-        if data.load_chunks():
-            return True  # Load was sync, load is done.
-
-        return False  # Load was async, so not loaded yet.
+        return bool(data.load_chunks())
 
     def match(self, data: ChunkedSliceData) -> bool:
         """Return True if slice data matches what we are loading.

@@ -122,8 +122,7 @@ class VispyShapesLayer(VispyBaseLayer):
 
     def _get_text_node(self):
         """Function to get the text node from the Compound visual"""
-        text_node = self.node._subvisuals[-1]
-        return text_node
+        return self.node._subvisuals[-1]
 
     def _on_text_change(self, event=None):
         if event is not None:

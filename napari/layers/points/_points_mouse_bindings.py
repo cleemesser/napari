@@ -36,15 +36,10 @@ def select(layer, event):
     if modify_selection:
         if value is not None:
             layer.selected_data = _toggle_selected(layer.selected_data, value)
-    else:
-        if value is not None:
-            # If the current index is not in the current list make it the only
-            # index selected, otherwise don't change the selection so that
-            # the current selection can be dragged together.
-            if value not in layer.selected_data:
-                layer.selected_data = {value}
-        else:
-            layer.selected_data = set()
+    elif value is None:
+        layer.selected_data = set()
+    elif value not in layer.selected_data:
+        layer.selected_data = {value}
     layer._set_highlight()
 
     # Set _drag_start value here to prevent an offset when mouse_move happens

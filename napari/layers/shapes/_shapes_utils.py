@@ -39,14 +39,12 @@ def inside_boxes(boxes):
     BCBM = np.multiply(BC, BM).sum(1)
     BCBC = np.multiply(BC, BC).sum(1)
 
-    c1 = 0 <= ABAM
+    c1 = ABAM >= 0
     c2 = ABAM <= ABAB
-    c3 = 0 <= BCBM
+    c3 = BCBM >= 0
     c4 = BCBM <= BCBC
 
-    inside = np.all(np.array([c1, c2, c3, c4]), axis=0)
-
-    return inside
+    return np.all(np.array([c1, c2, c3, c4]), axis=0)
 
 
 def triangles_intersect_box(triangles, corners):
@@ -68,9 +66,7 @@ def triangles_intersect_box(triangles, corners):
     vertices_inside = triangle_vertices_inside_box(triangles, corners)
     edge_intersects = triangle_edges_intersect_box(triangles, corners)
 
-    intersects = np.logical_or(vertices_inside, edge_intersects)
-
-    return intersects
+    return np.logical_or(vertices_inside, edge_intersects)
 
 
 def triangle_vertices_inside_box(triangles, corners):
@@ -97,9 +93,7 @@ def triangle_vertices_inside_box(triangles, corners):
         above_bottom = np.all(triangles[:, i, :] >= box[0], axis=1)
         vertices_inside[:, i] = np.logical_and(below_top, above_bottom)
 
-    inside = np.any(vertices_inside, axis=1)
-
-    return inside
+    return np.any(vertices_inside, axis=1)
 
 
 def triangle_edges_intersect_box(triangles, corners):
@@ -181,11 +175,7 @@ def lines_intersect(p1, q1, p2, q2):
         return True
 
     # p2, q2 and q1 are collinear and q1 lies on segment p2q2
-    if o4 == 0 and on_segment(p2, q1, q2):
-        return True
-
-    # Doesn't fall into any special cases
-    return False
+    return bool(o4 == 0 and on_segment(p2, q1, q2))
 
 
 def on_segment(p, q, r):
@@ -205,17 +195,12 @@ def on_segment(p, q, r):
     on : bool
         Bool indicating if q is on segment from p to r
     """
-    if (
+    return (
         q[0] <= max(p[0], r[0])
         and q[0] >= min(p[0], r[0])
         and q[1] <= max(p[1], r[1])
         and q[1] >= min(p[1], r[1])
-    ):
-        on = True
-    else:
-        on = False
-
-    return on
+    )
 
 
 def orientation(p, q, r):
@@ -237,9 +222,7 @@ def orientation(p, q, r):
         if counterclockwise.
     """
     val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
-    val = np.sign(val)
-
-    return val
+    return np.sign(val)
 
 
 def is_collinear(points):
@@ -258,13 +241,7 @@ def is_collinear(points):
     if len(points) < 3:
         return True
 
-    # The collinearity test takes three points, the first two are the first
-    # two in the list, and then the third is iterated through in the loop
-    for p in points[2:]:
-        if orientation(points[0], points[1], p) != 0:
-            return False
-
-    return True
+    return all(orientation(points[0], points[1], p) == 0 for p in points[2:])
 
 
 def point_to_lines(point, lines):
@@ -345,7 +322,7 @@ def create_box(data):
     tr = np.array([max_val[0], min_val[1]])
     br = np.array([max_val[0], max_val[1]])
     bl = np.array([min_val[0], max_val[1]])
-    box = np.array(
+    return np.array(
         [
             tl,
             (tl + tr) / 2,
@@ -358,7 +335,6 @@ def create_box(data):
             (tl + tr + br + bl) / 4,
         ]
     )
-    return box
 
 
 def rectangle_to_box(data):
@@ -378,14 +354,14 @@ def rectangle_to_box(data):
         the corners and midpoints of the box in clockwise order starting in the
         upper-left corner. The last point is the center of the box
     """
-    if not data.shape[0] == 4:
+    if data.shape[0] != 4:
         raise ValueError(
             trans._(
                 "Data shape does not match expected `[4, D]` shape specifying corners for the rectangle",
                 deferred=True,
             )
         )
-    box = np.array(
+    return np.array(
         [
             data[0],
             (data[0] + data[1]) / 2,
@@ -398,7 +374,6 @@ def rectangle_to_box(data):
             data.mean(axis=0),
         ]
     )
-    return box
 
 
 def find_corners(data):
@@ -421,8 +396,7 @@ def find_corners(data):
     tr = np.array([max_val[0], min_val[1]])
     br = np.array([max_val[0], max_val[1]])
     bl = np.array([min_val[0], max_val[1]])
-    corners = np.array([tl, tr, br, bl])
-    return corners
+    return np.array([tl, tr, br, bl])
 
 
 def center_radii_to_corners(center, radii):
@@ -441,8 +415,7 @@ def center_radii_to_corners(center, radii):
         4x2 array of corners of the bounding box
     """
     data = np.array([center + radii, center - radii])
-    corners = find_corners(data)
-    return corners
+    return find_corners(data)
 
 
 def triangulate_ellipse(corners, num_segments=100):
@@ -484,7 +457,7 @@ def triangulate_ellipse(corners, num_segments=100):
 
 
     """
-    if not corners.shape[0] == 4:
+    if corners.shape[0] != 4:
         raise ValueError(
             trans._(
                 "Data shape does not match expected `[4, D]` shape specifying corners for the ellipse",
@@ -847,8 +820,7 @@ def generate_tube_meshes(path, closed=False, tube_points=10):
             index_c = ip * tube_points + jp
             index_d = i * tube_points + jp
 
-            indices.append([index_a, index_b, index_d])
-            indices.append([index_b, index_c, index_d])
+            indices.extend(([index_a, index_b, index_d], [index_b, index_c, index_d]))
     triangles = np.array(indices, dtype=np.uint32)
 
     centers = grid.reshape(grid.shape[0] * grid.shape[1], 3)
@@ -935,8 +907,7 @@ def grid_points_in_poly(shape, vertices):
         [(x, y) for x in range(shape[0]) for y in range(shape[1])], dtype=int
     )
     inside = points_in_poly(points, vertices)
-    mask = inside.reshape(shape)
-    return mask
+    return inside.reshape(shape)
 
 
 def points_in_poly(points, vertices):
@@ -957,6 +928,8 @@ def points_in_poly(points, vertices):
     n_verts = len(vertices)
     inside = np.zeros(len(points), dtype=bool)
     j = n_verts - 1
+    # Prevents floating point imprecision from generating false positives
+    tolerance = 1e-12
     for i in range(n_verts):
         # Determine if a horizontal ray emanating from the point crosses the
         # line defined by vertices i-1 and vertices i.
@@ -968,16 +941,14 @@ def points_in_poly(points, vertices):
         )
         cond_3 = np.logical_or(cond_1, cond_2)
         d = vertices[j] - vertices[i]
-        # Prevents floating point imprecision from generating false positives
-        tolerance = 1e-12
         d = np.where(abs(d) < tolerance, 0, d)
-        if d[1] == 0:
-            # If y vertices are aligned avoid division by zero
-            cond_4 = 0 < d[0] * (points[:, 1] - vertices[i, 1])
-        else:
-            cond_4 = points[:, 0] < (
-                d[0] * (points[:, 1] - vertices[i, 1]) / d[1] + vertices[i, 0]
-            )
+        cond_4 = (
+            0 < d[0] * (points[:, 1] - vertices[i, 1])
+            if d[1] == 0
+            else points[:, 0]
+            < (d[0] * (points[:, 1] - vertices[i, 1]) / d[1] + vertices[i, 0])
+        )
+
         cond_5 = np.logical_and(cond_3, cond_4)
         inside[cond_5] = 1 - inside[cond_5]
         j = i
@@ -1083,14 +1054,12 @@ def number_of_shapes(data):
     """
     if len(data) == 0:
         # If no new shapes
-        n_shapes = 0
+        return 0
     elif np.array(data[0]).ndim == 1:
         # If a single array for a shape
-        n_shapes = 1
+        return 1
     else:
-        n_shapes = len(data)
-
-    return n_shapes
+        return len(data)
 
 
 def validate_num_vertices(

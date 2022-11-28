@@ -93,7 +93,7 @@ def test_add_simple_shape(shape_type, create_known_shapes_layer, Event):
     layer, n_shapes, known_non_shape = create_known_shapes_layer
 
     # Add shape at location where non exists
-    layer.mode = 'add_' + shape_type
+    layer.mode = f'add_{shape_type}'
 
     # Simulate click
     event = ReadOnlyWrapper(
@@ -144,7 +144,7 @@ def test_add_complex_shape(shape_type, create_known_shapes_layer, Event):
 
     desired_shape = [[20, 30], [10, 50], [60, 40], [80, 20]]
     # Add shape at location where non exists
-    layer.mode = 'add_' + shape_type
+    layer.mode = f'add_{shape_type}'
 
     for coord in desired_shape:
         # Simulate move, click, and release
@@ -594,7 +594,7 @@ def test_unselecting_shapes(mode, create_known_shapes_layer, Event):
     mouse_release_callbacks(layer, event)
 
     # Check clicked shape selected
-    assert len(layer.selected_data) == 0
+    assert not layer.selected_data
 
 
 @pytest.mark.parametrize('mode', ['select', 'direct'])
@@ -769,20 +769,19 @@ def test_drag_start_selection(
         assert layer.selected_data == {0}
 
     if len(layer.selected_data) > 0:
-        center_list = []
-        for idx in layer.selected_data:
-            center_list.append(layer.data[idx].mean(axis=0))
+        center_list = [layer.data[idx].mean(axis=0) for idx in layer.selected_data]
         center = np.mean(center_list, axis=0)
     else:
         center = [0, 0]
 
-    if not modifier:
-        start_position = [
+    start_position = (
+        initial_position
+        if modifier
+        else [
             initial_position[0] - center[0],
             initial_position[1] - center[1],
         ]
-    else:
-        start_position = initial_position
+    )
 
     is_point_move = len(layer.selected_data) > 0 and on_point and not modifier
 
@@ -859,25 +858,23 @@ def test_drag_start_selection(
 
     if on_point and 0 in pre_selection and modifier:
         assert layer.selected_data == pre_selection - {0}
-    elif on_point and 0 in pre_selection and not modifier:
+    elif on_point and 0 in pre_selection:
         assert layer.selected_data == pre_selection
-    elif on_point and 0 not in pre_selection and modifier:
+    elif on_point and modifier:
         assert layer.selected_data == pre_selection | {0}
-    elif on_point and 0 not in pre_selection and not modifier:
+    elif on_point:
         assert layer.selected_data == {0}
     elif 0 in pre_selection and modifier:
         assert 0 not in layer.selected_data
         assert layer.selected_data == (set(range(n_points)) - pre_selection)
-    elif 0 in pre_selection and not modifier:
+    elif 0 in pre_selection:
         assert 0 in layer.selected_data
         assert layer.selected_data == set(range(n_points))
-    elif 0 not in pre_selection and modifier:
+    elif modifier:
         assert 0 in layer.selected_data
         assert layer.selected_data == (set(range(n_points)) - pre_selection)
-    elif 0 not in pre_selection and not modifier:
+    else:
         assert 0 in layer.selected_data
         assert layer.selected_data == set(range(n_points))
-    else:
-        assert False, 'Unreachable code'  # pragma: no cover
     assert layer._drag_box is None
     assert layer._drag_start is None

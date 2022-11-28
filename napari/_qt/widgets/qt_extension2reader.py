@@ -169,11 +169,12 @@ class Extension2ReaderTable(QWidget):
         self._new_reader_dropdown.clear()
 
         readers = self._npe2_readers.copy()
-        to_delete = []
         compatible_readers = get_potential_readers(new_pattern)
-        for plugin_name, display_name in readers.items():
-            if plugin_name not in compatible_readers:
-                to_delete.append(plugin_name)
+        to_delete = [
+            plugin_name
+            for plugin_name, display_name in readers.items()
+            if plugin_name not in compatible_readers
+        ]
 
         for reader in to_delete:
             del readers[reader]

@@ -797,21 +797,21 @@ class ViewerModel(KeymapProvider, MousemapProvider, EventedModel):
             'experimental_clipping_planes': experimental_clipping_planes,
         }
 
-        # these arguments are *already* iterables in the single-channel case.
-        iterable_kwargs = {
-            'scale',
-            'translate',
-            'rotate',
-            'shear',
-            'affine',
-            'contrast_limits',
-            'metadata',
-            'experimental_clipping_planes',
-        }
-
         if channel_axis is None:
             kwargs['colormap'] = kwargs['colormap'] or 'gray'
             kwargs['blending'] = kwargs['blending'] or 'translucent_no_depth'
+            # these arguments are *already* iterables in the single-channel case.
+            iterable_kwargs = {
+                'scale',
+                'translate',
+                'rotate',
+                'shear',
+                'affine',
+                'contrast_limits',
+                'metadata',
+                'experimental_clipping_planes',
+            }
+
             # Helpful message if someone tries to add multi-channel kwargs,
             # but forget the channel_axis arg
             for k, v in kwargs.items():
@@ -830,7 +830,7 @@ class ViewerModel(KeymapProvider, MousemapProvider, EventedModel):
         else:
             layerdata_list = split_channels(data, channel_axis, **kwargs)
 
-            layer_list = list()
+            layer_list = []
             for image, i_kwargs, _ in layerdata_list:
                 layer = Image(image, **i_kwargs)
                 self.layers.append(layer)
@@ -1006,17 +1006,17 @@ class ViewerModel(KeymapProvider, MousemapProvider, EventedModel):
 
         added: List[Layer] = []  # for layers that get added
         with progress(
-            paths,
-            desc=trans._('Opening Files'),
-            total=0
-            if len(paths) == 1
-            else None,  # indeterminate bar for 1 file
-        ) as pbr:
+                paths,
+                desc=trans._('Opening Files'),
+                total=0
+                if len(paths) == 1
+                else None,  # indeterminate bar for 1 file
+            ) as pbr:
             for _path in pbr:
                 # If _path is a list, set stack to True
-                _stack = True if isinstance(_path, list) else False
+                _stack = isinstance(_path, list)
                 # If _path is not a list already, make it a list.
-                _path = [_path] if not isinstance(_path, list) else _path
+                _path = _path if isinstance(_path, list) else [_path]
                 if plugin:
                     added.extend(
                         self._add_layers_with_plugins(
@@ -1127,30 +1127,7 @@ class ViewerModel(KeymapProvider, MousemapProvider, EventedModel):
             )
             plugin = None
 
-        # preferred plugin exists, or we just have one plugin available
-        if plugin or len(readers) == 1:
-            plugin = plugin or next(iter(readers.keys()))
-            try:
-                added = self._add_layers_with_plugins(
-                    paths,
-                    kwargs=kwargs,
-                    stack=stack,
-                    plugin=plugin,
-                    layer_type=layer_type,
-                )
-            # plugin failed
-            except Exception as e:
-                raise ReaderPluginError(
-                    trans._(
-                        'Tried opening with {plugin}, but failed.',
-                        deferred=True,
-                        plugin=plugin,
-                    ),
-                    plugin,
-                    paths,
-                ) from e
-        # multiple plugins
-        else:
+        if not plugin and len(readers) != 1:
             raise MultipleReaderError(
                 trans._(
                     "Multiple plugins found capable of reading {path_message}. Select plugin from {plugins} and pass to reading function e.g. `viewer.open(..., plugin=...)`.",
@@ -1162,6 +1139,26 @@ class ViewerModel(KeymapProvider, MousemapProvider, EventedModel):
                 paths,
             )
 
+        plugin = plugin or next(iter(readers.keys()))
+        try:
+            added = self._add_layers_with_plugins(
+                paths,
+                kwargs=kwargs,
+                stack=stack,
+                plugin=plugin,
+                layer_type=layer_type,
+            )
+        # plugin failed
+        except Exception as e:
+            raise ReaderPluginError(
+                trans._(
+                    'Tried opening with {plugin}, but failed.',
+                    deferred=True,
+                    plugin=plugin,
+                ),
+                plugin,
+                paths,
+            ) from e
         return added
 
     def _add_layers_with_plugins(
@@ -1215,16 +1212,11 @@ class ViewerModel(KeymapProvider, MousemapProvider, EventedModel):
         for p in paths:
             assert isinstance(p, str)
 
-        if stack:
-            layer_data, hookimpl = read_data_with_plugins(
-                paths, plugin=plugin, stack=stack
-            )
-        else:
+        if not stack:
             assert len(paths) == 1
-            layer_data, hookimpl = read_data_with_plugins(
-                paths, plugin=plugin, stack=stack
-            )
-
+        layer_data, hookimpl = read_data_with_plugins(
+            paths, plugin=plugin, stack=stack
+        )
         # glean layer names from filename. These will be used as *fallback*
         # names, if the plugin does not return a name kwarg in their meta dict.
         filenames = []
@@ -1320,7 +1312,7 @@ class ViewerModel(KeymapProvider, MousemapProvider, EventedModel):
             )
 
         try:
-            add_method = getattr(self, 'add_' + layer_type)
+            add_method = getattr(self, f'add_{layer_type}')
             layer = add_method(data, **(meta or {}))
         except TypeError as exc:
             if 'unexpected keyword argument' not in str(exc):
@@ -1374,7 +1366,7 @@ def _normalize_layer_data(data: LayerData) -> FullLayerData:
                 )
             )
     else:
-        _data.append(dict())
+        _data.append({})
     if len(_data) > 2:
         if _data[2] not in layers.NAMES:
             raise ValueError(
@@ -1444,7 +1436,7 @@ def _unify_data_and_user_kwargs(
         # both layer_type and additional keyword arguments to viewer.open(),
         # it is their responsibility to make sure the kwargs match the
         # layer_type.
-        _meta.update(prune_kwargs(kwargs, _type) if not layer_type else kwargs)
+        _meta.update(kwargs if layer_type else prune_kwargs(kwargs, _type))
 
     if not _meta.get('name') and fallback_name:
         _meta['name'] = fallback_name
@@ -1488,7 +1480,7 @@ def prune_kwargs(kwargs: Dict[str, Any], layer_type: str) -> Dict[str, Any]:
     >>> prune_kwargs(test_kwargs, 'labels')
     {'scale': (0.75, 1), 'blending': 'additive', 'num_colors': 10}
     """
-    add_method = getattr(ViewerModel, 'add_' + layer_type, None)
+    add_method = getattr(ViewerModel, f'add_{layer_type}', None)
     if not add_method or layer_type == 'layer':
         raise ValueError(
             trans._(
@@ -1506,7 +1498,7 @@ def prune_kwargs(kwargs: Dict[str, Any], layer_type: str) -> Dict[str, Any]:
 @lru_cache(maxsize=1)
 def valid_add_kwargs() -> Dict[str, Set[str]]:
     """Return a dict where keys are layer types & values are valid kwargs."""
-    valid = dict()
+    valid = {}
     for meth in dir(ViewerModel):
         if not meth.startswith('add_') or meth[4:] == 'layer':
             continue

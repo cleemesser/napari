@@ -28,9 +28,7 @@ def _mbits(num_bytes, duration_ms) -> float:
     """Return Mbit/s."""
     mbits = (num_bytes * 8) / (1024 * 1024)
     seconds = duration_ms / 1000
-    if seconds == 0:
-        return 0
-    return mbits / seconds
+    return 0 if seconds == 0 else mbits / seconds
 
 
 class LoadType(Enum):
@@ -151,9 +149,7 @@ class LoadStats:
 
         if num_async == 0:
             return "sync"
-        if num_sync == 0:
-            return "async"
-        return "mixed"
+        return "async" if num_sync == 0 else "mixed"
 
 
 class LayerInfo:

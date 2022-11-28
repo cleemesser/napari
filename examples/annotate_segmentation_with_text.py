@@ -37,10 +37,7 @@ def segment(image):
     # remove artifacts connected to image border
     cleared = remove_small_objects(clear_border(bw), 20)
 
-    # label image regions
-    label_image = label(cleared)
-
-    return label_image
+    return label(cleared)
 
 
 def make_bbox(bbox_extents):
@@ -87,9 +84,7 @@ def circularity(perimeter, area):
     circularity : float
         The circularity of the region as defined by 4*pi*area / perimeter^2
     """
-    circularity = 4 * np.pi * area / (perimeter ** 2)
-
-    return circularity
+    return 4 * np.pi * area / (perimeter ** 2)
 
 
 # load the image and segment it

@@ -21,8 +21,7 @@ def create_sample_coords(n_polys=3000, n_vertices=32):
     radius = radius.reshape((-1, n_vertices, 1))
     rays = rays.reshape((1, -1, 2))
     center = center.reshape((-1, 1, 2))
-    coords = center + radius * rays
-    return coords
+    return center + radius * rays
 
 
 def time_me(label, func):

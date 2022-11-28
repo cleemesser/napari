@@ -50,8 +50,7 @@ points_layer.edge_color_mode = 'colormap'
 # bind a function to toggle the good_point annotation of the selected points
 @viewer.bind_key('t')
 def toggle_point_annotation(viewer):
-    selected_points = list(points_layer.selected_data)
-    if len(selected_points) > 0:
+    if selected_points := list(points_layer.selected_data):
         good_point = points_layer.features['good_point']
         good_point[selected_points] = ~good_point[selected_points]
         points_layer.features['good_point'] = good_point

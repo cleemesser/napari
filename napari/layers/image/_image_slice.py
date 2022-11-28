@@ -26,14 +26,13 @@ def _create_loader_class() -> ImageLoader:
     ImageLoader
         Return ImageLoader for sync or ChunkImageLoader for async.
     """
-    if config.async_loading:
-        from napari.layers.image.experimental._chunked_image_loader import (
-            ChunkedImageLoader,
-        )
-
-        return ChunkedImageLoader()
-    else:
+    if not config.async_loading:
         return ImageLoader()
+    from napari.layers.image.experimental._chunked_image_loader import (
+        ChunkedImageLoader,
+    )
+
+    return ChunkedImageLoader()
 
 
 class ImageSlice:

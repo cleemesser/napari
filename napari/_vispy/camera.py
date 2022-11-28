@@ -49,14 +49,11 @@ class VispyCamera:
         Note that angles might be different than the ones that might have generated the quaternion.
         """
 
-        if self._view.camera == self._3D_camera:
-            # Do conversion from quaternion representation to euler angles
-            angles = quaternion2euler(
-                self._view.camera._quaternion, degrees=True
-            )
-        else:
-            angles = (0, 0, 90)
-        return angles
+        return (
+            quaternion2euler(self._view.camera._quaternion, degrees=True)
+            if self._view.camera == self._3D_camera
+            else (0, 0, 90)
+        )
 
     @angles.setter
     def angles(self, angles):
@@ -81,9 +78,7 @@ class VispyCamera:
         else:
             # in 2D, we arbitrarily choose 0.0 as the center in z
             center = tuple(self._view.camera.center[:2]) + (0.0,)
-        # switch from VisPy xyz ordering to NumPy prc ordering
-        center = center[::-1]
-        return center
+        return center[::-1]
 
     @center.setter
     def center(self, center):
@@ -107,8 +102,7 @@ class VispyCamera:
                 [self._view.camera.rect.width, self._view.camera.rect.height]
             )
             scale[np.isclose(scale, 0)] = 1  # fix for #2875
-        zoom = np.min(canvas_size / scale)
-        return zoom
+        return np.min(canvas_size / scale)
 
     @zoom.setter
     def zoom(self, zoom):

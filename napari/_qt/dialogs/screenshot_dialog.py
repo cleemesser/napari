@@ -47,7 +47,7 @@ class ScreenshotDialog(QFileDialog):
     def accept(self):
         save_path = self.selectedFiles()[0]
         if os.path.splitext(save_path)[1] == "":
-            save_path = save_path + ".png"
+            save_path = f"{save_path}.png"
             if os.path.exists(save_path):
                 res = QMessageBox().warning(
                     self,

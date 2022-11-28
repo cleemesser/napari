@@ -83,9 +83,7 @@ class Dims(EventedModel):
     # validators
     @validator('axis_labels', pre=True)
     def _string_to_list(v):
-        if isinstance(v, str):
-            return list(v)
-        return v
+        return list(v) if isinstance(v, str) else v
 
     @root_validator
     def _check_dims(cls, values):
@@ -125,7 +123,7 @@ class Dims(EventedModel):
             )
 
         # Check the order is a permutation of 0, ..., ndim - 1
-        if not set(values['order']) == set(range(ndim)):
+        if set(values['order']) != set(range(ndim)):
             raise ValueError(
                 trans._(
                     "Invalid ordering {order} for {ndim} dimensions",
@@ -163,14 +161,12 @@ class Dims(EventedModel):
     @property
     def point(self) -> Tuple[int, ...]:
         """Tuple of float: Value of each dimension."""
-        # The point value is computed from the range and current_step
-        point = tuple(
+        return tuple(
             min_val + step_size * value
             for (min_val, max_val, step_size), value in zip(
                 self.range, self.current_step
             )
         )
-        return point
 
     @property
     def displayed(self) -> Tuple[int, ...]:
@@ -382,7 +378,7 @@ class Dims(EventedModel):
     def _focus_up(self):
         """Shift focused dimension slider to be the next slider above."""
         sliders = [d for d in self.not_displayed if self.nsteps[d] > 1]
-        if len(sliders) == 0:
+        if not sliders:
             return
 
         index = (sliders.index(self.last_used) + 1) % len(sliders)
@@ -391,7 +387,7 @@ class Dims(EventedModel):
     def _focus_down(self):
         """Shift focused dimension slider to be the next slider bellow."""
         sliders = [d for d in self.not_displayed if self.nsteps[d] > 1]
-        if len(sliders) == 0:
+        if not sliders:
             return
 
         index = (sliders.index(self.last_used) - 1) % len(sliders)

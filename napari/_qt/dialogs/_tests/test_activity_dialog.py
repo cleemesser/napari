@@ -38,9 +38,7 @@ def activity_button_shows_indicator(activity_dialog):
 def get_qt_labeled_progress_bar(prog, viewer):
     """Given viewer and progress, finds associated QtLabeledProgressBar"""
     activity_dialog = viewer.window._qt_viewer.window()._activity_dialog
-    pbar = activity_dialog.get_pbar_from_prog(prog)
-
-    return pbar
+    return activity_dialog.get_pbar_from_prog(prog)
 
 
 def get_progress_groups(qt_viewer):
@@ -116,10 +114,7 @@ def test_progress_indicator(make_napari_viewer):
         assert activity_button_shows_indicator(activity_dialog)
 
 
-@pytest.mark.skipif(
-    bool(sys.platform == 'linux'),
-    reason='need to debug sefaults with set_description',
-)
+@pytest.mark.skipif(sys.platform == 'linux', reason='need to debug sefaults with set_description')
 def test_progress_set_description(make_napari_viewer):
     viewer = make_napari_viewer(show=SHOW)
 

@@ -28,16 +28,14 @@ Notes for using the plugin-related fixtures here:
        ...
    ```
 """
+
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
 
-try:
+with suppress(ModuleNotFoundError):
     __import__('dotenv').load_dotenv()
-except ModuleNotFoundError:
-    pass
-
 import os
 from itertools import chain
 from multiprocessing.pool import ThreadPool
@@ -206,11 +204,10 @@ def _is_async_mode() -> bool:
     """
     if not async_loading:
         return False  # Not enabled at all.
-    else:
-        # Late import so we don't import experimental code unless using it.
-        from napari.components.experimental.chunk import chunk_loader
+    # Late import so we don't import experimental code unless using it.
+    from napari.components.experimental.chunk import chunk_loader
 
-        return not chunk_loader.force_synchronous
+    return not chunk_loader.force_synchronous
 
 
 @pytest.fixture(autouse=True)

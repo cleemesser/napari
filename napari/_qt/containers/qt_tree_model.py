@@ -36,9 +36,7 @@ class QtNodeTreeModel(_BaseEventedItemModel[NodeType]):
         item = self.getItem(index)
         if role == Qt.ItemDataRole.DisplayRole:
             return item._node_name()
-        if role == Qt.ItemDataRole.UserRole:
-            return self.getItem(index)
-        return None
+        return self.getItem(index) if role == Qt.ItemDataRole.UserRole else None
 
     def index(
         self, row: int, column: int = 0, parent: QModelIndex = QModelIndex()
@@ -128,9 +126,7 @@ class QtNodeTreeModel(_BaseEventedItemModel[NodeType]):
         """
         # If the list of indexes is empty, or there are no supported MIME types
         # nullptr is returned rather than a serialized empty list.
-        if not indices:
-            return 0
-        return NodeMimeData([self.getItem(i) for i in indices])
+        return NodeMimeData([self.getItem(i) for i in indices]) if indices else 0
 
     def dropMimeData(
         self,

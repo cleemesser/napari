@@ -178,20 +178,7 @@ class ChunkLoader:
         assert info.load_type == LoadType.AUTO  # AUTO is the only other type.
 
         # If forcing synchronous then AUTO always means synchronous.
-        if self.force_synchronous:
-            return True
-
-        # If it's been loading "fast" then load synchronously. There's no
-        # point is loading async if it loads really fast.
-
-        # TODO_OCTREE: we no longer do auto-sync, this would be need to be
-        # implement in a nice way for octree?
-        # if info.loads_fast:
-        #    return True
-
-        # Finally, load synchronously if it's an ndarray (in memory) otherwise
-        # it's Dask or something else and we load async.
-        return request.in_memory
+        return True if self.force_synchronous else request.in_memory
 
     def _on_done(self, request: ChunkRequest) -> None:
         """Called when a future finishes with success or was cancelled.

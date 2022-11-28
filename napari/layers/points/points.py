@@ -686,12 +686,10 @@ class Points(Layer):
         extent_data : array, shape (2, D)
         """
         if len(self.data) == 0:
-            extrema = np.full((2, self.ndim), np.nan)
-        else:
-            maxs = np.max(self.data, axis=0)
-            mins = np.min(self.data, axis=0)
-            extrema = np.vstack([mins, maxs])
-        return extrema
+            return np.full((2, self.ndim), np.nan)
+        maxs = np.max(self.data, axis=0)
+        mins = np.min(self.data, axis=0)
+        return np.vstack([mins, maxs])
 
     @property
     def out_of_slice_display(self) -> bool:
@@ -700,7 +698,7 @@ class Points(Layer):
 
     @out_of_slice_display.setter
     def out_of_slice_display(self, out_of_slice_display: bool) -> None:
-        self._out_of_slice_display = bool(out_of_slice_display)
+        self._out_of_slice_display = out_of_slice_display
         self.events.out_of_slice_display()
         self.events.n_dimensional()
         self.refresh()
@@ -725,10 +723,7 @@ class Points(Layer):
     def symbol(self, symbol: Union[str, Symbol]) -> None:
         if isinstance(symbol, str):
             # Convert the alias string to the deduplicated string
-            if symbol in SYMBOL_ALIAS:
-                symbol = SYMBOL_ALIAS[symbol]
-            else:
-                symbol = Symbol(symbol)
+            symbol = SYMBOL_ALIAS[symbol] if symbol in SYMBOL_ALIAS else Symbol(symbol)
         self._symbol = symbol
         self.events.symbol()
         self.events.highlight()
@@ -1101,24 +1096,7 @@ class Points(Layer):
             else:
                 color_property = ''
             if color_property == '':
-                if self.features.shape[1] > 0:
-                    new_color_property = next(iter(self.features))
-                    color_manager.color_properties = {
-                        'name': new_color_property,
-                        'values': self.features[new_color_property].to_numpy(),
-                        'current_value': np.squeeze(
-                            self.current_properties[new_color_property]
-                        ),
-                    }
-                    warnings.warn(
-                        trans._(
-                            '_{attribute}_color_property was not set, setting to: {new_color_property}',
-                            deferred=True,
-                            attribute=attribute,
-                            new_color_property=new_color_property,
-                        )
-                    )
-                else:
+                if self.features.shape[1] <= 0:
                     raise ValueError(
                         trans._(
                             'There must be a valid Points.properties to use {color_mode}',
@@ -1127,6 +1105,22 @@ class Points(Layer):
                         )
                     )
 
+                new_color_property = next(iter(self.features))
+                color_manager.color_properties = {
+                    'name': new_color_property,
+                    'values': self.features[new_color_property].to_numpy(),
+                    'current_value': np.squeeze(
+                        self.current_properties[new_color_property]
+                    ),
+                }
+                warnings.warn(
+                    trans._(
+                        '_{attribute}_color_property was not set, setting to: {new_color_property}',
+                        deferred=True,
+                        attribute=attribute,
+                        new_color_property=new_color_property,
+                    )
+                )
             # ColorMode.COLORMAP can only be applied to numeric properties
             color_property = color_manager.color_properties.name
             if (color_mode == ColorMode.COLORMAP) and not issubclass(
@@ -1248,9 +1242,9 @@ class Points(Layer):
             with self.block_update_properties():
                 self.current_edge_width = unique_edge_width
 
-        unique_properties = {}
-        for k, v in self.properties.items():
-            unique_properties[k] = _unique_element(v[index])
+        unique_properties = {
+            k: _unique_element(v[index]) for k, v in self.properties.items()
+        }
 
         if all(p is not None for p in unique_properties.values()):
             with self.block_update_properties():
@@ -1411,19 +1405,16 @@ class Points(Layer):
         view_size : (N x D) np.ndarray
             Array of sizes for the N points in view
         """
-        if len(self._indices_view) > 0:
-            # Get the point sizes and scale for ndim display
-            sizes = (
+        return (
+            (
                 self.size[
                     np.ix_(self._indices_view, self._slice_input.displayed)
                 ].mean(axis=1)
                 * self._view_size_scale
             )
-
-        else:
-            # if no points, return an empty list
-            sizes = np.array([])
-        return sizes
+            if len(self._indices_view) > 0
+            else np.array([])
+        )
 
     @property
     def _view_edge_width(self) -> np.ndarray:
@@ -1564,10 +1555,9 @@ class Points(Layer):
             # find the point that is most in the foreground
             candidate_point_distances = projection_distances[indices]
             closest_index = indices[np.argmin(candidate_point_distances)]
-            selection = self._indices_view[closest_index]
+            return self._indices_view[closest_index]
         else:
-            selection = None
-        return selection
+            return None
 
     def _display_bounding_box_augmented(self, dims_displayed: np.ndarray):
         """An augmented, axis-aligned (ndisplay, 2) bounding box.
@@ -1746,17 +1736,15 @@ class Points(Layer):
                     if hover_point not in index:
                         index.append(hover_point)
                 index.sort()
-            else:
-                # only highlight hovered points in select mode
-                if (
+            elif (
                     self._value in self._indices_view
                     and self._mode == Mode.SELECT
                     and not self._is_selecting
                 ):
-                    hover_point = list(self._indices_view).index(self._value)
-                    index = [hover_point]
-                else:
-                    index = []
+                hover_point = list(self._indices_view).index(self._value)
+                index = [hover_point]
+            else:
+                index = []
 
             self._highlight_index = index
         else:
@@ -1834,8 +1822,7 @@ class Points(Layer):
 
     def remove_selected(self):
         """Removes selected points if any."""
-        index = list(self.selected_data)
-        index.sort()
+        index = sorted(self.selected_data)
         if len(index):
             self._shown = np.delete(self._shown, index, axis=0)
             self._size = np.delete(self._size, index, axis=0)
@@ -1848,14 +1835,13 @@ class Points(Layer):
             self.text.remove(index)
             if self._value in self.selected_data:
                 self._value = None
-            else:
-                if self._value is not None:
-                    # update the index of self._value to account for the
-                    # data being removed
-                    indices_removed = np.array(index) < self._value
-                    offset = np.sum(indices_removed)
-                    self._value -= offset
-                    self._value_stored -= offset
+            elif self._value is not None:
+                # update the index of self._value to account for the
+                # data being removed
+                indices_removed = np.array(index) < self._value
+                offset = np.sum(indices_removed)
+                self._value -= offset
+                self._value_stored -= offset
 
             self.data = np.delete(self.data, index, axis=0)
             self.selected_data = set()
@@ -1908,7 +1894,7 @@ class Points(Layer):
         dims_displayed = list(self._slice_input.displayed)
         if self._drag_start is None:
             self._drag_start = np.array(position, dtype=float)[dims_displayed]
-            if len(selection_indices) > 0 and center_by_data:
+            if selection_indices and center_by_data:
                 center = self.data[
                     np.ix_(selection_indices, dims_displayed)
                 ].mean(axis=0)

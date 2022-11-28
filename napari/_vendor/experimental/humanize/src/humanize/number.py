@@ -65,16 +65,9 @@ def intcomma(value, ndigits=None):
     except (TypeError, ValueError):
         return value
 
-    if ndigits:
-        orig = "{0:.{1}f}".format(value, ndigits)
-    else:
-        orig = str(value)
-
+    orig = "{0:.{1}f}".format(value, ndigits) if ndigits else str(value)
     new = re.sub(r"^(-?\d+)(\d{3})", r"\g<1>,\g<2>", orig)
-    if orig == new:
-        return new
-    else:
-        return intcomma(new)
+    return new if orig == new else intcomma(new)
 
 
 powers = [10 ** x for x in (6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 100)]
@@ -119,11 +112,10 @@ def intword(value, format="%.1f"):
     for ordinal, power in enumerate(powers[1:], 1):
         if value < power:
             chopped = value / float(powers[ordinal - 1])
-            if float(format % chopped) == float(10 ** 3):
-                chopped = value / float(powers[ordinal])
-                return (" ".join([format, _(human_powers[ordinal])])) % chopped
-            else:
+            if float(format % chopped) != float(10**3):
                 return (" ".join([format, _(human_powers[ordinal - 1])])) % chopped
+            chopped = value / float(powers[ordinal])
+            return (" ".join([format, _(human_powers[ordinal])])) % chopped
     return str(value)
 
 
@@ -141,20 +133,22 @@ def apnumber(value):
         value = int(value)
     except (TypeError, ValueError):
         return value
-    if not 0 <= value < 10:
-        return str(value)
     return (
-        _("zero"),
-        _("one"),
-        _("two"),
-        _("three"),
-        _("four"),
-        _("five"),
-        _("six"),
-        _("seven"),
-        _("eight"),
-        _("nine"),
-    )[value]
+        (
+            _("zero"),
+            _("one"),
+            _("two"),
+            _("three"),
+            _("four"),
+            _("five"),
+            _("six"),
+            _("seven"),
+            _("eight"),
+            _("nine"),
+        )[value]
+        if 0 <= value < 10
+        else str(value)
+    )
 
 
 def fractional(value):
@@ -265,9 +259,5 @@ def scientific(value, precision=2):
     if negative:
         new_part2.append(exponents["-"])
 
-    for char in part2:
-        new_part2.append(exponents[char])
-
-    final_str = part1 + " x 10" + "".join(new_part2)
-
-    return final_str
+    new_part2.extend(exponents[char] for char in part2)
+    return f"{part1} x 10" + "".join(new_part2)

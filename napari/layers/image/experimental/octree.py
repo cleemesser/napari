@@ -183,10 +183,7 @@ class Octree:
         """
         ancestors = self.get_ancestors(octree_chunk, 1, create=create)
         # If no parent exists yet then returns None
-        if len(ancestors) == 0:
-            return None
-        else:
-            return ancestors[0]
+        return None if len(ancestors) == 0 else ancestors[0]
 
     def get_ancestors(
         self,

@@ -243,9 +243,7 @@ class QtVectorsControls(QtLayerControls):
         """
         property_choices = [*self.layer.property_choices]
         properties = [*self.layer.properties]
-        property_values = np.union1d(property_choices, properties)
-
-        return property_values
+        return np.union1d(property_choices, properties)
 
     def _on_length_change(self):
         """Change length of vectors."""

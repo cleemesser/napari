@@ -58,7 +58,7 @@ def test_convert_dtype(mode):
 
     data[5, 5] = 1000
     assert data[5, 5] == 1000
-    if mode == 'int8' or mode == 'uint8':
+    if mode in ['int8', 'uint8']:
         # label value 1000 is outside of the target data type range.
         with pytest.raises(AssertionError):
             _convert_dtype(ll, mode=mode)

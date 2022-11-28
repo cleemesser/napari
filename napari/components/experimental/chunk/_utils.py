@@ -17,18 +17,8 @@ def _get_type_str(data) -> str:
     data_type = type(data)
 
     if data_type == list:
-        if len(data) == 0:
-            return "EMPTY"
-        # Recursively get the type string of the zeroth level.
-        return _get_type_str(data[0])
-
-    if data_type == da.Array:
-        # Special case this because otherwise data_type.__name__
-        # below would just return "Array".
-        return "dask"
-
-    # For class numpy.ndarray this returns "ndarray"
-    return data_type.__name__
+        return "EMPTY" if len(data) == 0 else _get_type_str(data[0])
+    return "dask" if data_type == da.Array else data_type.__name__
 
 
 class StatWindow:
@@ -83,6 +73,4 @@ class StatWindow:
         float
             The average of all values in the window.
         """
-        if len(self.values) == 0:
-            return None
-        return float(np.average(self.values))
+        return None if len(self.values) == 0 else float(np.average(self.values))

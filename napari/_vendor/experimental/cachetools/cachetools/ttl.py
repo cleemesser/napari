@@ -29,10 +29,7 @@ class _Timer(object):
         self.__nesting = 0
 
     def __call__(self):
-        if self.__nesting == 0:
-            return self.__timer()
-        else:
-            return self.__time
+        return self.__timer() if self.__nesting == 0 else self.__time
 
     def __enter__(self):
         if self.__nesting == 0:
@@ -78,10 +75,7 @@ class TTLCache(Cache):
             expired = False
         else:
             expired = link.expire < self.__timer()
-        if expired:
-            return self.__missing__(key)
-        else:
-            return cache_getitem(self, key)
+        return self.__missing__(key) if expired else cache_getitem(self, key)
 
     def __setitem__(self, key, value, cache_setitem=Cache.__setitem__):
         with self.__timer as time:
@@ -198,7 +192,7 @@ class TTLCache(Cache):
             try:
                 key = next(iter(self.__links))
             except StopIteration:
-                msg = '%s is empty' % self.__class__.__name__
+                msg = f'{self.__class__.__name__} is empty'
                 raise KeyError(msg) from None
             else:
                 return (key, self.pop(key))

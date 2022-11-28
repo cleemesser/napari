@@ -363,11 +363,7 @@ def _run():
                         _npe2.widget_iterator(), plugin_manager.iter_widgets()
                     ):
                         if name == 'dock' and pname == _pname:
-                            if isinstance(_wnames, dict):
-                                # Plugin_manager iter_widgets return wnames as dict keys
-                                wnames = list(_wnames.keys())
-                            else:
-                                wnames = _wnames
+                            wnames = list(_wnames.keys()) if isinstance(_wnames, dict) else _wnames
                             break
 
                 if wnames:

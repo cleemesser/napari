@@ -60,10 +60,7 @@ def _load_monitor_config() -> Optional[dict]:
     # We shouldn't even call into this file unless NAPARI_MON is defined
     # but check to be sure.
     value = os.getenv("NAPARI_MON")
-    if value in [None, "0"]:
-        return None
-
-    return _load_config(value)
+    return None if value is None or value == "0" else _load_config(value)
 
 
 def _setup_logging(config: dict) -> None:

@@ -45,8 +45,7 @@ def _create_box_from_corners_3d(
     corner_1 = box_corners[0] + horizontal_displacement
     corner_3 = box_corners[0] + up_displacement
 
-    box = np.array([box_corners[0], corner_1, box_corners[1], corner_3])
-    return box
+    return np.array([box_corners[0], corner_1, box_corners[1], corner_3])
 
 
 def create_box(data):
@@ -68,8 +67,7 @@ def create_box(data):
     tr = np.array([max_val[0], min_val[1]])
     br = np.array([max_val[0], max_val[1]])
     bl = np.array([min_val[0], max_val[1]])
-    box = np.array([tl, tr, br, bl])
-    return box
+    return np.array([tl, tr, br, bl])
 
 
 def points_to_squares(points, sizes):
@@ -87,7 +85,7 @@ def points_to_squares(points, sizes):
     rect : (4N, 2) array
         Vertices of the expanded points
     """
-    rect = np.concatenate(
+    return np.concatenate(
         [
             points + 0.5 * np.array([sizes, sizes]).T,
             points + 0.5 * np.array([sizes, -sizes]).T,
@@ -96,7 +94,6 @@ def points_to_squares(points, sizes):
         ],
         axis=0,
     )
-    return rect
 
 
 def _points_in_box_3d(

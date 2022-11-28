@@ -51,7 +51,4 @@ def quaternion2euler(quaternion, degrees=False):
 
     angles = (theta_1, theta_2, theta_3)
 
-    if degrees:
-        return tuple(np.degrees(angles))
-    else:
-        return angles
+    return tuple(np.degrees(angles)) if degrees else angles

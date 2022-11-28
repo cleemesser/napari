@@ -285,7 +285,7 @@ class QColorButton(QtWidgets.QPushButton):
             self.colorChanged.emit()
 
         if self._color:
-            self.setStyleSheet("background-color: %s;" % self._color)
+            self.setStyleSheet(f"background-color: {self._color};")
         else:
             self.setStyleSheet("")
 
@@ -504,10 +504,7 @@ class ArraySchemaWidget(SchemaWidgetMixin, QtWidgets.QWidget):
 
     def is_fixed_schema(self, index: int) -> bool:
         schema = self.schema['items']
-        if isinstance(schema, dict):
-            return False
-
-        return index < len(schema)
+        return False if isinstance(schema, dict) else index < len(schema)
 
     @property
     def next_item_schema(self) -> Optional[dict]:
@@ -525,10 +522,7 @@ class ArraySchemaWidget(SchemaWidgetMixin, QtWidgets.QWidget):
             if isinstance(item_schema, bool):
                 return None
 
-        if not is_concrete_schema(item_schema):
-            return None
-
-        return item_schema
+        return item_schema if is_concrete_schema(item_schema) else None
 
     def add_item(self, item_state=None):
         self._add_item(item_state)
@@ -691,11 +685,7 @@ class ObjectSchemaWidget(SchemaWidgetMixin, QtWidgets.QGroupBox):
         widgets = {}
         layout.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy(1))
         for name, sub_schema in schema['properties'].items():
-            if 'description' in sub_schema:
-                description = sub_schema['description']
-            else:
-                description = ""
-
+            description = sub_schema['description'] if 'description' in sub_schema else ""
             sub_ui_schema = ui_schema.get(name, {})
             widget = widget_builder.create_widget(
                 sub_schema, sub_ui_schema, description=description
@@ -764,11 +754,11 @@ class FormWidget(QtWidgets.QWidget):
 
         layout = self.error_widget.layout()
         while True:
-            item = layout.takeAt(0)
-            if not item:
-                break
-            item.widget().deleteLater()
+            if item := layout.takeAt(0):
+                item.widget().deleteLater()
 
+            else:
+                break
         for err in errors:
             widget = QtWidgets.QLabel(
                 f"<b>.{'.'.join(err.path)}</b> {err.message}"

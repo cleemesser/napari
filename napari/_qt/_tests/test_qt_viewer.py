@@ -273,7 +273,7 @@ def test_screenshot_dialog(make_napari_viewer, tmpdir):
         mocker2.warning.return_value = QMessageBox.Yes
         viewer.window._qt_viewer._screenshot_dialog()
     # Assert behaviour is correct
-    expected_filepath = input_filepath + '.png'  # add default file extension
+    expected_filepath = f'{input_filepath}.png'
     assert os.path.exists(expected_filepath)
     output_data = imread(expected_filepath)
     expected_data = viewer.window._qt_viewer.screenshot(flash=False)

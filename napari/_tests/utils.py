@@ -260,8 +260,7 @@ def assert_layer_state_equal(
     maybe dataframe-like, which need to be checked for equality differently.
     """
     assert actual.keys() == expected.keys()
-    for name in actual:
-        actual_value = actual[name]
+    for name, actual_value in actual.items():
         expected_value = expected[name]
         if isinstance(actual_value, pd.DataFrame):
             pd.testing.assert_frame_equal(actual_value, expected_value)
